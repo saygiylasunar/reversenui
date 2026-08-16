@@ -6,9 +6,42 @@
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.cjs && node --check preload.cjs && node --check shell.js"
+    "check": "node --check main.cjs && node --check preload.cjs && node --check shell.js",
+    "build:win": "electron-builder --win portable --x64"
   },
   "devDependencies": {
-    "electron": "43.2.0"
+    "electron": "43.2.0",
+    "electron-builder": "26.15.7"
+  },
+  "build": {
+    "appId": "com.saygiylasunar.reversenui",
+    "productName": "ReversenUI",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "shell.html",
+      "shell.js",
+      "shell.css",
+      "default-tools.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/core/backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "ReversenUI-${version}-portable.${ext}"
+    }
   }
 }
