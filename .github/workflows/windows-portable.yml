@@ -1,0 +1,64 @@
+name: Windows Portable
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'desktop/**'
+      - 'profiles/**'
+      - 'build-portable.ps1'
+      - '.github/workflows/windows-portable.yml'
+
+jobs:
+  build-portable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Create Python environment
+        shell: pwsh
+        run: |
+          python -m venv backend\.venv
+          .\backend\.venv\Scripts\python.exe -m pip install --upgrade pip
+          .\backend\.venv\Scripts\python.exe -m pip install -e backend pyinstaller==6.21.0
+
+      - name: Build frontend
+        shell: pwsh
+        run: |
+          Push-Location frontend
+          npm install
+          npm run build
+          Pop-Location
+
+      - name: Freeze standalone core
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force desktop\build\core\backend\.venv\Scripts | Out-Null
+          .\backend\.venv\Scripts\pyinstaller.exe --noconfirm --clean --onefile --name python --paths backend --add-data 'frontend/dist:frontend/dist' --distpath desktop\build\core\backend\.venv\Scripts --workpath desktop\build\pyinstaller-work --specpath desktop\build backend\run_core.py
+
+      - name: Build Electron portable exe
+        shell: pwsh
+        run: |
+          Push-Location desktop
+          npm install
+          npm run check
+          npm run build:win
+          Pop-Location
+
+      - name: Upload portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReversenUI-Windows-Portable
+          path: desktop/dist/ReversenUI-*-portable.exe
+          if-no-files-found: error
