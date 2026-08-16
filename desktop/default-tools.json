@@ -1,0 +1,50 @@
+[
+  {
+    "id": "comfyui",
+    "name": "ComfyUI",
+    "type": "local-web",
+    "url": "http://127.0.0.1:8188",
+    "healthUrl": "http://127.0.0.1:8188/system_stats",
+    "command": "",
+    "args": [],
+    "cwd": "",
+    "stopOnExit": false,
+    "autoStart": false
+  },
+  {
+    "id": "ostris-ai-toolkit",
+    "name": "Ostris AI Toolkit",
+    "type": "local-web",
+    "url": "http://127.0.0.1:8675",
+    "healthUrl": "http://127.0.0.1:8675",
+    "command": "npm.cmd",
+    "args": ["run", "build_and_start"],
+    "cwd": "",
+    "stopOnExit": false,
+    "autoStart": false
+  },
+  {
+    "id": "jupyter",
+    "name": "Jupyter",
+    "type": "local-web",
+    "url": "http://127.0.0.1:8888",
+    "healthUrl": "http://127.0.0.1:8888",
+    "command": "",
+    "args": [],
+    "cwd": "",
+    "stopOnExit": false,
+    "autoStart": false
+  },
+  {
+    "id": "tensorboard",
+    "name": "TensorBoard",
+    "type": "local-web",
+    "url": "http://127.0.0.1:6006",
+    "healthUrl": "http://127.0.0.1:6006",
+    "command": "",
+    "args": [],
+    "cwd": "",
+    "stopOnExit": false,
+    "autoStart": false
+  }
+]
