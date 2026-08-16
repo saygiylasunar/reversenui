@@ -18,13 +18,14 @@ Pop-Location
 Write-Host '[3/5] Freezing standalone ReversenUI core...' -ForegroundColor Cyan
 Remove-Item .\desktop\build -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force .\desktop\build\core\backend\.venv\Scripts | Out-Null
+$FrontendDist = (Resolve-Path '.\frontend\dist').Path
 & .\backend\.venv\Scripts\pyinstaller.exe `
   --noconfirm `
   --clean `
   --onefile `
   --name python `
   --paths .\backend `
-  --add-data 'frontend/dist:frontend/dist' `
+  --add-data "${FrontendDist}:frontend/dist" `
   --distpath .\desktop\build\core\backend\.venv\Scripts `
   --workpath .\desktop\build\pyinstaller-work `
   --specpath .\desktop\build `
