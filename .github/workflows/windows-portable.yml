@@ -45,7 +45,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force desktop\build\core\backend\.venv\Scripts | Out-Null
-          .\backend\.venv\Scripts\pyinstaller.exe --noconfirm --clean --onefile --name python --paths backend --add-data 'frontend/dist:frontend/dist' --distpath desktop\build\core\backend\.venv\Scripts --workpath desktop\build\pyinstaller-work --specpath desktop\build backend\run_core.py
+          $FrontendDist = (Resolve-Path '.\frontend\dist').Path
+          .\backend\.venv\Scripts\pyinstaller.exe --noconfirm --clean --onefile --name python --paths backend --add-data "${FrontendDist}:frontend/dist" --distpath desktop\build\core\backend\.venv\Scripts --workpath desktop\build\pyinstaller-work --specpath desktop\build backend\run_core.py
 
       - name: Build Electron portable exe
         shell: pwsh
