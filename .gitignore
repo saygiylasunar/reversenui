@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Local ReversenUI state
+.env
+.env.*
+!.env.example
+data/
+output/
+logs/
+*.db
+*.sqlite*
+
+# Local AI assets / paths
+models/
+checkpoints/
+loras/
+local.settings.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

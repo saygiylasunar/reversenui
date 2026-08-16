@@ -1,0 +1,34 @@
+{
+  "id": "flux1-comfy",
+  "label": "FLUX.1 / ComfyUI",
+  "model_family": "flux1",
+  "encoder_family": ["t5xxl", "clip_l"],
+  "environment": "comfyui",
+  "capabilities": {
+    "negative_prompt": false,
+    "numeric_weights": false
+  },
+  "ordering": [
+    "intent",
+    "subject",
+    "identity",
+    "physical_attributes",
+    "expression",
+    "pose_action",
+    "wardrobe",
+    "environment",
+    "composition",
+    "camera",
+    "lighting",
+    "materials_texture",
+    "mood",
+    "color",
+    "style",
+    "technical",
+    "constraints"
+  ],
+  "renderer": {
+    "style": "natural-language",
+    "separator": ", "
+  }
+}
