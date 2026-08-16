@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';" />
+  <title>ReversenUI</title>
+  <link rel="stylesheet" href="shell.css" />
+</head>
+<body>
+  <div id="shell">
+    <header class="topbar">
+      <div class="brand">R/ <span>ReversenUI</span></div>
+      <div id="tabs" class="tabs"></div>
+      <button id="newLocal" class="icon-btn" title="Open localhost tool">＋</button>
+      <div class="window-stats"><span id="ramStat">RAM —</span><span id="procStat">— proc</span></div>
+    </header>
+
+    <div class="toolbar">
+      <div class="layout-group">
+        <span class="toolbar-label">Layout</span>
+        <button data-layout="single" class="layout-btn active">▣</button>
+        <button data-layout="vertical" class="layout-btn">◫</button>
+        <button data-layout="horizontal" class="layout-btn">⬒</button>
+        <button data-layout="grid" class="layout-btn">⊞</button>
+      </div>
+      <div class="memory-group">
+        <span class="toolbar-label">Memory Saver</span>
+        <select id="memoryProfile">
+          <option value="never">Never</option>
+          <option value="minimum">Minimum</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="maximum">Maximum</option>
+        </select>
+      </div>
+      <div class="toolbar-hint">Shift-click tabs to select tiles</div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="side-tabs">
+        <button class="side-tab active" data-side="tools">Tools</button>
+        <button class="side-tab" data-side="vault">Vault</button>
+      </div>
+
+      <section id="toolsPane" class="side-pane active">
+        <div class="pane-head"><strong>Local tools</strong><button id="addTool">＋</button></div>
+        <div id="toolsList" class="tool-list"></div>
+        <details class="config-box">
+          <summary>Tool registry</summary>
+          <p>Configure start command / working directory for tools installed in custom locations.</p>
+          <textarea id="toolJson" spellcheck="false"></textarea>
+          <button id="saveTools" class="primary">Save registry</button>
+        </details>
+      </section>
+
+      <section id="vaultPane" class="side-pane">
+        <div class="pane-head"><strong>Vault / Secure Notes</strong><button id="addVault">＋</button></div>
+        <div class="generator">
+          <label>Password length <input id="pwLength" type="number" min="8" max="128" value="24" /></label>
+          <div class="generator-row"><input id="generatedPassword" readonly /><button id="generatePassword">Generate</button></div>
+        </div>
+        <div id="vaultList" class="vault-list"></div>
+        <button id="saveVault" class="primary">Save encrypted vault</button>
+        <p class="tiny">Stored through the OS-backed Electron safeStorage API.</p>
+      </section>
+    </aside>
+
+    <div class="workspace-backdrop">
+      <div class="placeholder">Select or open a workspace.</div>
+    </div>
+  </div>
+
+  <dialog id="localDialog">
+    <form method="dialog">
+      <h3>Open local web tool</h3>
+      <label>Title <input id="localTitle" value="Local Tool" /></label>
+      <label>URL <input id="localUrl" value="http://127.0.0.1:3000" /></label>
+      <div class="dialog-actions"><button value="cancel">Cancel</button><button id="confirmLocal" value="default" class="primary">Open</button></div>
+    </form>
+  </dialog>
+
+  <script src="shell.js"></script>
+</body>
+</html>
