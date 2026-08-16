@@ -1,134 +1,69 @@
-import { ChangeEvent, useMemo, useState } from 'react'
+import { ChangeEvent, PointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 type ModuleId = 'inspector' | 'prompt' | 'output'
+type WorkflowSummary = { node_count:number; node_types:string[]; models:string[]; loras:string[]; vaes:string[]; text_encoders:string[]; samplers:string[]; schedulers:string[]; text_prompts:string[] }
+type Inspection = { filename:string; format:string|null; size_bytes:number; width:number|null; height:number|null; mode:string|null; generator:string; exif_orientation:number|null; has_icc_profile:boolean; metadata_keys:string[]; comfyui:{ workflow_found:boolean; prompt_found:boolean; workflow:unknown; prompt:unknown; summary:WorkflowSummary }; raw_metadata:Record<string,unknown> }
+type PromptProfile = { id:string; label:string; model_family:string; encoder_family:string[]; environment:string; style:string; separator:string; ordering:string[]; capabilities:{negative_prompt:boolean; numeric_weights:boolean} }
+type Drawer = { key:string; label:string; text:string; enabled:boolean; priority:number; emphasis:number }
+type Selection = { left:number; top:number; right:number; bottom:number }
 
-type Inspection = {
-  filename: string
-  format: string | null
-  size_bytes: number
-  width: number | null
-  height: number | null
-  mode: string | null
-  generator: string
-  metadata_keys: string[]
-  comfyui: {
-    workflow_found: boolean
-    prompt_found: boolean
-    workflow: unknown
-    prompt: unknown
-  }
-  raw_metadata: Record<string, unknown>
-}
-
-const modules: Array<{ id: ModuleId; label: string; subtitle: string }> = [
-  { id: 'inspector', label: 'Inspector', subtitle: 'Inspect metadata and embedded workflows' },
-  { id: 'prompt', label: 'Prompt Architect', subtitle: 'Compose model-aware prompts' },
-  { id: 'output', label: 'Output', subtitle: 'Crop, resize, clean and convert' },
+const modules:Array<{id:ModuleId;label:string;subtitle:string}>=[
+  {id:'inspector',label:'Inspector',subtitle:'Reverse-engineer artifacts'},
+  {id:'prompt',label:'Prompt Architect',subtitle:'Build model-aware prompts'},
+  {id:'output',label:'Output',subtitle:'Crop, clean, resize and convert'},
 ]
+const defaultDrawers:Drawer[]=[['intent','Intent'],['quality','Quality'],['subject','Subject'],['identity','Identity'],['physical','Physical'],['expression','Expression'],['pose','Pose / Action'],['wardrobe','Wardrobe'],['environment','Environment'],['composition','Composition'],['camera','Camera'],['lighting','Lighting'],['texture','Materials / Texture'],['mood','Mood'],['color','Color'],['style','Style'],['technical','Technical'],['constraints','Constraints'],['negative','Negative']].map(([key,label])=>({key,label,text:'',enabled:true,priority:50,emphasis:1}))
 
-function App() {
-  const [active, setActive] = useState<ModuleId>('inspector')
-  const [inspection, setInspection] = useState<Inspection | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
+function bytes(value:number){ if(value<1024)return `${value} B`; if(value<1024*1024)return `${(value/1024).toFixed(1)} KiB`; return `${(value/1024/1024).toFixed(2)} MiB` }
+async function jsonOrError(response:Response){ const payload=await response.json(); if(!response.ok)throw new Error(payload.detail??'Request failed'); return payload }
 
-  async function inspect(file: File) {
-    setBusy(true)
-    setError('')
-    setInspection(null)
-    const body = new FormData()
-    body.append('file', file)
+function TagList({title,values}:{title:string;values:string[]}){ return <div className="tag-block"><span>{title}</span><div className="tags">{values.length?values.map(value=><b key={value}>{value}</b>):<i>—</i>}</div></div> }
 
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/inspect', { method: 'POST', body })
-      if (!response.ok) throw new Error((await response.json()).detail ?? 'Inspection failed')
-      setInspection(await response.json())
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Inspection failed')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  function onFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (file) void inspect(file)
-  }
-
-  const dimensions = useMemo(() => {
-    if (!inspection?.width || !inspection.height) return '—'
-    return `${inspection.width} × ${inspection.height}`
-  }, [inspection])
-
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">R/</div>
-          <div><strong>ReversenUI</strong><span>local workbench</span></div>
-        </div>
-        <nav>
-          {modules.map((module) => (
-            <button key={module.id} className={active === module.id ? 'nav-item active' : 'nav-item'} onClick={() => setActive(module.id)}>
-              <strong>{module.label}</strong><span>{module.subtitle}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="local-badge">127.0.0.1 · local only</div>
-      </aside>
-
-      <main>
-        <header><div><span className="eyebrow">REVERSENUI / {active.toUpperCase()}</span><h1>{modules.find((module) => module.id === active)?.label}</h1></div></header>
-
-        {active === 'inspector' && (
-          <section className="workspace">
-            <label className="dropzone">
-              <input type="file" accept="image/*" onChange={onFile} />
-              <span className="drop-title">{busy ? 'Inspecting…' : 'Drop an artifact or choose a file'}</span>
-              <span>PNG, JPEG, WebP and other Pillow-readable images · max 64 MiB</span>
-            </label>
-
-            {error && <div className="error">{error}</div>}
-
-            {inspection && (
-              <div className="result-grid">
-                <article className="card summary">
-                  <span className="card-label">Artifact</span>
-                  <h2>{inspection.filename}</h2>
-                  <dl>
-                    <div><dt>Format</dt><dd>{inspection.format ?? '—'}</dd></div>
-                    <div><dt>Dimensions</dt><dd>{dimensions}</dd></div>
-                    <div><dt>Mode</dt><dd>{inspection.mode ?? '—'}</dd></div>
-                    <div><dt>Generator</dt><dd>{inspection.generator}</dd></div>
-                  </dl>
-                </article>
-
-                <article className="card">
-                  <span className="card-label">ComfyUI</span>
-                  <div className="checks">
-                    <div><span>Workflow</span><strong className={inspection.comfyui.workflow_found ? 'ok' : 'muted'}>{inspection.comfyui.workflow_found ? 'FOUND' : 'NOT FOUND'}</strong></div>
-                    <div><span>API Prompt</span><strong className={inspection.comfyui.prompt_found ? 'ok' : 'muted'}>{inspection.comfyui.prompt_found ? 'FOUND' : 'NOT FOUND'}</strong></div>
-                  </div>
-                </article>
-
-                <article className="card raw">
-                  <span className="card-label">Raw metadata</span>
-                  <pre>{JSON.stringify(inspection.raw_metadata, null, 2)}</pre>
-                </article>
-              </div>
-            )}
-          </section>
-        )}
-
-        {active === 'prompt' && <ModuleShell title="Prompt Architect" text="Base model + text encoder + parser profiles will drive ordered prompt drawers here." />}
-        {active === 'output' && <ModuleShell title="Output Pipeline" text="One ordered pipeline will crop, resize, sanitize metadata and encode the selected output format." />}
-      </main>
-    </div>
-  )
+function InspectorPanel(){
+  const [inspection,setInspection]=useState<Inspection|null>(null); const [busy,setBusy]=useState(false); const [error,setError]=useState('')
+  async function inspect(file:File){ setBusy(true);setError('');const body=new FormData();body.append('file',file);try{const response=await fetch('/api/inspect',{method:'POST',body});setInspection(await jsonOrError(response))}catch(cause){setInspection(null);setError(cause instanceof Error?cause.message:'Inspection failed')}finally{setBusy(false)} }
+  function onFile(event:ChangeEvent<HTMLInputElement>){const file=event.target.files?.[0];if(file)void inspect(file)}
+  const summary=inspection?.comfyui.summary
+  return <section className="workspace">
+    <label className="dropzone"><input type="file" accept="image/*" onChange={onFile}/><span className="drop-title">{busy?'Inspecting…':'Drop an image artifact or choose a file'}</span><span>PNG · JPEG · WebP · TIFF and other Pillow-readable formats · max 128 MiB</span></label>
+    {error&&<div className="notice error">{error}</div>}
+    {inspection&&<>
+      <div className="result-grid">
+        <article className="card"><span className="card-label">Artifact</span><h2>{inspection.filename}</h2><dl className="facts"><div><dt>Format</dt><dd>{inspection.format??'—'}</dd></div><div><dt>Dimensions</dt><dd>{inspection.width} × {inspection.height}</dd></div><div><dt>Size</dt><dd>{bytes(inspection.size_bytes)}</dd></div><div><dt>Mode</dt><dd>{inspection.mode??'—'}</dd></div><div><dt>Generator</dt><dd>{inspection.generator}</dd></div><div><dt>ICC</dt><dd>{inspection.has_icc_profile?'present':'none'}</dd></div></dl></article>
+        <article className="card"><span className="card-label">ComfyUI</span><div className="status-row"><span>Workflow</span><strong className={inspection.comfyui.workflow_found?'ok':'muted'}>{inspection.comfyui.workflow_found?'FOUND':'NONE'}</strong></div><div className="status-row"><span>API Prompt</span><strong className={inspection.comfyui.prompt_found?'ok':'muted'}>{inspection.comfyui.prompt_found?'FOUND':'NONE'}</strong></div><div className="status-row"><span>Nodes</span><strong>{summary?.node_count??0}</strong></div><div className="status-row"><span>Metadata keys</span><strong>{inspection.metadata_keys.length}</strong></div></article>
+      </div>
+      {summary&&summary.node_count>0&&<article className="card wide-card"><span className="card-label">Recovered recipe</span><div className="recipe-grid"><TagList title="Models" values={summary.models}/><TagList title="LoRAs" values={summary.loras}/><TagList title="VAEs" values={summary.vaes}/><TagList title="Text encoders" values={summary.text_encoders}/><TagList title="Samplers" values={summary.samplers}/><TagList title="Schedulers" values={summary.schedulers}/></div><details><summary>Node types ({summary.node_types.length})</summary><div className="tags">{summary.node_types.map(value=><span key={value}>{value}</span>)}</div></details>{summary.text_prompts.length>0&&<details open><summary>Recovered text prompts</summary>{summary.text_prompts.map((value,index)=><pre key={index}>{value}</pre>)}</details>}</article>}
+      <article className="card wide-card"><span className="card-label">Raw metadata</span><details><summary>Show raw fields</summary><pre>{JSON.stringify(inspection.raw_metadata,null,2)}</pre></details></article>
+    </>}
+  </section>
 }
 
-function ModuleShell({ title, text }: { title: string; text: string }) {
-  return <section className="workspace"><div className="module-shell"><span className="card-label">v0.1 shell</span><h2>{title}</h2><p>{text}</p></div></section>
+function PromptPanel(){
+  const [profiles,setProfiles]=useState<PromptProfile[]>([]);const [profileId,setProfileId]=useState('flux1-comfy');const [drawers,setDrawers]=useState<Drawer[]>(defaultDrawers);const [masterPrompt,setMasterPrompt]=useState('');const [negativePrompt,setNegativePrompt]=useState('');const [error,setError]=useState('')
+  useEffect(()=>{fetch('/api/prompt/profiles').then(jsonOrError).then((data:PromptProfile[])=>{setProfiles(data);if(data.length&&!data.some(profile=>profile.id===profileId))setProfileId(data[0].id)}).catch(cause=>setError(cause instanceof Error?cause.message:'Could not load prompt profiles'))},[])
+  const profile=profiles.find(item=>item.id===profileId)
+  const orderedDrawers=useMemo(()=>{if(!profile)return drawers;const order=new Map<string,number>(profile.ordering.map((key,index)=>[key,index]));return [...drawers].sort((a,b)=>(order.get(a.key)??999)-(order.get(b.key)??999))},[drawers,profile])
+  function patchDrawer(key:string,patch:Partial<Drawer>){setDrawers(current=>current.map(drawer=>drawer.key===key?{...drawer,...patch}:drawer))}
+  async function compose(){setError('');try{const response=await fetch('/api/prompt/compose',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_id:profileId,drawers:drawers.map(({key,text,enabled,priority,emphasis})=>({key,text,enabled,priority,emphasis}))})});const result=await jsonOrError(response);setMasterPrompt(result.master_prompt);setNegativePrompt(result.negative_prompt)}catch(cause){setError(cause instanceof Error?cause.message:'Prompt composition failed')}}
+  return <section className="workspace prompt-layout"><div className="panel-stack">
+    <article className="card toolbar-card"><label>Prompt profile<select value={profileId} onChange={event=>setProfileId(event.target.value)}>{profiles.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}</select></label><div className="profile-facts"><span>{profile?.model_family??'—'}</span><span>{profile?.encoder_family.join(' + ')||'—'}</span><span>{profile?.style??'—'}</span></div></article>
+    <div className="drawer-list">{orderedDrawers.map(drawer=><article className="drawer" key={drawer.key}><div className="drawer-head"><label className="switch"><input type="checkbox" checked={drawer.enabled} onChange={event=>patchDrawer(drawer.key,{enabled:event.target.checked})}/><span>{drawer.label}</span></label><span className="priority">P{drawer.priority}</span></div><textarea value={drawer.text} placeholder={`Add ${drawer.label.toLowerCase()}…`} onChange={event=>patchDrawer(drawer.key,{text:event.target.value})}/><div className="drawer-controls"><label>Priority<input type="range" min="0" max="100" value={drawer.priority} onChange={event=>patchDrawer(drawer.key,{priority:Number(event.target.value)})}/></label><label>Emphasis<input type="number" min="0" max="3" step="0.05" value={drawer.emphasis} disabled={!profile?.capabilities.numeric_weights} onChange={event=>patchDrawer(drawer.key,{emphasis:Number(event.target.value)})}/></label></div></article>)}</div>
+  </div><aside className="composer-side"><article className="card sticky-card"><span className="card-label">Master prompt</span><textarea className="master-output" value={masterPrompt} readOnly placeholder="Your compiled prompt appears here."/>{profile?.capabilities.negative_prompt&&<><span className="card-label secondary-label">Negative prompt</span><textarea className="negative-output" value={negativePrompt} readOnly placeholder="Negative prompt"/></>}{error&&<div className="notice error">{error}</div>}<button className="primary" onClick={()=>void compose()}>BUILD MASTER PROMPT</button><button className="secondary" disabled={!masterPrompt} onClick={()=>void navigator.clipboard.writeText(masterPrompt)}>COPY</button></article></aside></section>
 }
 
-export default App
+function OutputPanel(){
+  const [file,setFile]=useState<File|null>(null);const [preview,setPreview]=useState('');const [cropEnabled,setCropEnabled]=useState(true);const [ratio,setRatio]=useState('1:1');const [selection,setSelection]=useState<Selection|null>(null);const [resizeEnabled,setResizeEnabled]=useState(true);const [resizeMode,setResizeMode]=useState('fill');const [width,setWidth]=useState(1024);const [height,setHeight]=useState(1024);const [metadata,setMetadata]=useState('ai-clean');const [preserveIcc,setPreserveIcc]=useState(true);const [format,setFormat]=useState('png');const [quality,setQuality]=useState(92);const [compress,setCompress]=useState(6);const [lossless,setLossless]=useState(false);const [progressive,setProgressive]=useState(true);const [alpha,setAlpha]=useState('preserve');const [background,setBackground]=useState('#ffffff');const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [resultInfo,setResultInfo]=useState('');const dragStart=useRef<{x:number;y:number}|null>(null);const previewRef=useRef<HTMLDivElement|null>(null)
+  useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview)},[preview])
+  function chooseFile(next:File|null){if(preview)URL.revokeObjectURL(preview);setFile(next);setSelection(null);setResultInfo('');setPreview(next?URL.createObjectURL(next):'')}
+  function point(event:PointerEvent<HTMLDivElement>){const rect=previewRef.current?.getBoundingClientRect();if(!rect)return{x:0,y:0};return{x:Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)),y:Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height))}}
+  function onPointerDown(event:PointerEvent<HTMLDivElement>){if(!cropEnabled||!preview)return;const p=point(event);dragStart.current=p;setSelection({left:p.x,top:p.y,right:p.x,bottom:p.y});event.currentTarget.setPointerCapture(event.pointerId)}
+  function onPointerMove(event:PointerEvent<HTMLDivElement>){const start=dragStart.current;if(!start)return;const p=point(event);setSelection({left:Math.min(start.x,p.x),top:Math.min(start.y,p.y),right:Math.max(start.x,p.x),bottom:Math.max(start.y,p.y)})}
+  function onPointerUp(){dragStart.current=null;setSelection(current=>current&&current.right-current.left>.01&&current.bottom-current.top>.01?current:null)}
+  async function processOutput(){if(!file)return;setBusy(true);setError('');setResultInfo('');const body=new FormData();body.append('file',file);const region=selection?[selection.left,selection.top,selection.right,selection.bottom]:null;body.append('recipe',JSON.stringify({auto_orient:true,crop:{enabled:cropEnabled,ratio,region},resize:{enabled:resizeEnabled,width,height,mode:resizeMode,percentage:100},metadata,preserve_icc:preserveIcc,format,options:{quality,png_compress_level:compress,progressive,optimize:true,lossless,webp_method:4,alpha,background}}));try{const response=await fetch('/api/output/process',{method:'POST',body});if(!response.ok){const payload=await response.json();throw new Error(payload.detail??'Output processing failed')}const blob=await response.blob();const disposition=response.headers.get('Content-Disposition')??'';const match=disposition.match(/filename="?([^";]+)"?/);const filename=match?.[1]??`reversenui-output.${format==='jpeg'?'jpg':format}`;const href=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=href;anchor.download=filename;anchor.click();setTimeout(()=>URL.revokeObjectURL(href),1000);setResultInfo(`${response.headers.get('X-ReversenUI-Width')??'?'} × ${response.headers.get('X-ReversenUI-Height')??'?'} · ${bytes(blob.size)}`)}catch(cause){setError(cause instanceof Error?cause.message:'Output processing failed')}finally{setBusy(false)}}
+  const overlayStyle=selection?{left:`${selection.left*100}%`,top:`${selection.top*100}%`,width:`${(selection.right-selection.left)*100}%`,height:`${(selection.bottom-selection.top)*100}%`}:undefined
+  return <section className="workspace output-layout"><div className="panel-stack"><article className="card"><span className="card-label">Input & crop region</span><label className="file-line"><input type="file" accept="image/*" onChange={event=>chooseFile(event.target.files?.[0]??null)}/><span>{file?.name??'Choose image'}</span></label><div className={preview?'image-preview loaded':'image-preview'} ref={previewRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}>{preview?<img src={preview} draggable={false}/>:<span>Preview</span>}{selection&&<div className="crop-overlay" style={overlayStyle}/>}</div><p className="hint">Drag over the preview to select an exact crop region. Clear it to use the centered ratio crop instead.</p><button className="secondary compact" onClick={()=>setSelection(null)} disabled={!selection}>CLEAR REGION</button></article></div>
+  <aside className="composer-side"><article className="card sticky-card settings-card"><span className="card-label">Pipeline</span><label className="switch line"><input type="checkbox" checked={cropEnabled} onChange={event=>setCropEnabled(event.target.checked)}/><span>Crop</span></label><label>Ratio<select value={ratio} onChange={event=>setRatio(event.target.value)}><option>1:1</option><option>4:3</option><option>3:2</option><option>16:9</option><option>9:16</option></select></label><label className="switch line"><input type="checkbox" checked={resizeEnabled} onChange={event=>setResizeEnabled(event.target.checked)}/><span>Resize</span></label><div className="two-col"><label>Width<input type="number" min="1" value={width} onChange={event=>setWidth(Number(event.target.value))}/></label><label>Height<input type="number" min="1" value={height} onChange={event=>setHeight(Number(event.target.value))}/></label></div><label>Resize mode<select value={resizeMode} onChange={event=>setResizeMode(event.target.value)}><option value="fit">Fit</option><option value="fill">Fill</option><option value="exact">Exact</option><option value="long-edge">Long edge</option><option value="short-edge">Short edge</option></select></label><label>Metadata<select value={metadata} onChange={event=>setMetadata(event.target.value)}><option value="preserve">Preserve</option><option value="privacy-clean">Privacy clean</option><option value="ai-clean">AI metadata clean</option><option value="strip-all">Strip everything</option></select></label><label className="switch line"><input type="checkbox" checked={preserveIcc} onChange={event=>setPreserveIcc(event.target.checked)}/><span>Preserve ICC profile</span></label><label>Output format<select value={format} onChange={event=>setFormat(event.target.value)}><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WebP</option></select></label>
+  {format==='png'&&<><label>Compression <strong>{compress}</strong><input type="range" min="0" max="9" value={compress} onChange={event=>setCompress(Number(event.target.value))}/></label><label>Alpha<select value={alpha} onChange={event=>setAlpha(event.target.value)}><option value="preserve">Preserve</option><option value="flatten">Flatten</option><option value="remove">Remove</option></select></label></>}{format==='jpeg'&&<><label>Quality <strong>{quality}%</strong><input type="range" min="1" max="100" value={quality} onChange={event=>setQuality(Number(event.target.value))}/></label><label className="switch line"><input type="checkbox" checked={progressive} onChange={event=>setProgressive(event.target.checked)}/><span>Progressive JPEG</span></label><label>Transparency background<input type="color" value={background} onChange={event=>setBackground(event.target.value)}/></label></>}{format==='webp'&&<><label>Quality <strong>{quality}%</strong><input type="range" min="1" max="100" value={quality} onChange={event=>setQuality(Number(event.target.value))}/></label><label className="switch line"><input type="checkbox" checked={lossless} onChange={event=>setLossless(event.target.checked)}/><span>Lossless WebP</span></label></>}{error&&<div className="notice error">{error}</div>}{resultInfo&&<div className="notice ok-notice">Exported · {resultInfo}</div>}<button className="primary" disabled={!file||busy} onClick={()=>void processOutput()}>{busy?'PROCESSING…':'PROCESS & EXPORT'}</button></article></aside></section>
+}
+
+export default function App(){const[active,setActive]=useState<ModuleId>('inspector');return <div className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark">R/</div><div><strong>ReversenUI</strong><span>local AI workbench</span></div></div><nav>{modules.map(module=><button key={module.id} className={active===module.id?'nav-item active':'nav-item'} onClick={()=>setActive(module.id)}><strong>{module.label}</strong><span>{module.subtitle}</span></button>)}</nav><div className="local-badge">● 127.0.0.1 · local only</div></aside><main><header><div><span className="eyebrow">REVERSENUI / {active.toUpperCase()}</span><h1>{modules.find(module=>module.id===active)?.label}</h1></div><span className="version">v0.2 flight</span></header>{active==='inspector'&&<InspectorPanel/>}{active==='prompt'&&<PromptPanel/>}{active==='output'&&<OutputPanel/>}</main></div>}
