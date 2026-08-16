@@ -2,66 +2,67 @@
 
 **Inspect. Understand. Compose. Process.**
 
-ReversenUI is a local-first engineering workbench for inspecting generative-AI artifacts, understanding embedded workflows and metadata, composing model-aware prompts, and processing image outputs through reusable pipelines.
+ReversenUI is a local-first AI engineering workbench for reverse-engineering generative-image artifacts, composing model-aware prompts, and producing clean image outputs through an ordered processing pipeline.
 
-## Core modules
+## Current flight · v0.2
 
-- **Inspector** — metadata, prompt, workflow, node and dependency inspection with an initial focus on ComfyUI artifacts.
-- **Prompt Architect** — model / text-encoder aware prompt composition using ordered semantic drawers and reusable profiles.
-- **Output** — non-destructive crop, resize, metadata sanitization and format conversion through a single ordered processing pipeline.
+### Inspector
+- Reads Pillow-supported image artifacts.
+- Detects embedded ComfyUI `workflow` and API `prompt` metadata.
+- Recovers node types and, when present, model/checkpoint names, LoRAs, VAEs, text encoders, samplers, schedulers and text prompts.
+- Shows raw metadata and detects A1111-compatible `parameters` metadata.
 
-## Principles
+### Prompt Architect
+- Profile-driven rather than hard-coded to one model family.
+- Ships with FLUX.1 + T5XXL/CLIP-L and SDXL + CLIP-G/CLIP-L ComfyUI profiles.
+- Ordered semantic drawers with separate priority and numeric emphasis.
+- Produces a master prompt and, where supported, a separate negative prompt.
 
-- Local-first: services bind to `127.0.0.1` by default.
-- KISS: simple UI over explicit, inspectable processing steps.
-- Non-destructive: source files are never overwritten by default.
-- Extensible: ComfyUI is the first integration, not the architecture boundary.
-- Transparent: normalized views never hide raw metadata from advanced inspection.
+### Output
+One **Process & Export** action executes: EXIF auto-orientation → crop → resize → metadata sanitation → ICC handling → format encoding.
 
-## v0.1 scaffold
+Current outputs: PNG (compression/alpha), JPEG (quality/progressive/background), WebP (quality/lossless). Metadata modes: Preserve, Privacy Clean, AI Metadata Clean, Strip Everything. ICC preservation is controlled separately.
 
-The first vertical slice can already inspect Pillow-readable image artifacts and detect embedded ComfyUI `workflow` and `prompt` fields. Prompt Architect and Output have their initial profile / recipe domain models ready for UI wiring.
-
-## Run locally
-
-### Backend
+## Start on Windows
+Prerequisites: **Python 3.11+** and **Node.js/npm**.
 
 ```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e .
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+powershell -ExecutionPolicy Bypass -File .\start.ps1
 ```
 
-Health check: `http://127.0.0.1:8000/api/health`
+First run creates a local Python venv, installs frontend dependencies, builds the UI, starts `127.0.0.1:8765`, and opens the browser. Subsequent runs reuse local dependencies.
 
-### Frontend
-
-In another terminal:
-
+## Development
+Backend:
+```powershell
+python -m venv backend\.venv
+.\backend\.venv\Scripts\Activate.ps1
+pip install -e backend
+uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8765 --reload
+```
+Frontend:
 ```powershell
 cd frontend
 npm install
 npm run dev
 ```
+Vite proxies `/api` to port `8765`.
 
-Open `http://127.0.0.1:5173`.
-
-## Repository layout
-
-```text
-backend/
-  app/
-    api/routes/        HTTP surface
-    core/artifacts/    artifact inspection
-    core/output/       output-pipeline domain
-frontend/
-  src/                 React workbench shell
-profiles/
-  prompt/              model / encoder / environment prompt profiles
+## Smoke tests
+```powershell
+.\backend\.venv\Scripts\python.exe -m unittest discover -s backend\tests -v
 ```
 
-## Status
+## Principles
+- **Local-first** — localhost by default.
+- **KISS** — simple UI over explicit processing steps.
+- **Non-destructive** — exports never overwrite sources by default.
+- **Extensible** — ComfyUI is the first integration, not the architecture boundary.
+- **Transparent** — normalized views coexist with raw metadata.
 
-Early development / v0.1.
+## Next targets
+- ComfyUI environment matcher (`/object_info`, model inventory, missing-node/model report)
+- deeper graph reconstruction and conditioning tracing
+- batch Output recipes/presets
+- more metadata adapters
+- workflow diff and model-library tooling

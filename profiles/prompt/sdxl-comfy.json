@@ -1,0 +1,11 @@
+{
+  "id": "sdxl-comfy",
+  "label": "SDXL · ComfyUI",
+  "model_family": "sdxl",
+  "encoder_family": ["clip_g", "clip_l"],
+  "environment": "comfyui",
+  "style": "tag-hybrid",
+  "separator": ", ",
+  "ordering": ["quality", "subject", "identity", "physical", "expression", "pose", "wardrobe", "environment", "composition", "camera", "lighting", "texture", "mood", "style", "technical", "constraints", "negative"],
+  "capabilities": {"negative_prompt": true, "numeric_weights": true}
+}
