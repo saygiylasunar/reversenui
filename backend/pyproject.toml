@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "reversenui-backend"
 version = "0.1.0"
@@ -10,3 +14,7 @@ dependencies = [
   "python-multipart>=0.0.20,<1",
   "Pillow>=12.3,<13",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
