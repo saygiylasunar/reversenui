@@ -8,6 +8,8 @@ venv/
 # Node
 node_modules/
 frontend/dist/
+desktop/dist/
+desktop/build/
 
 # Local ReversenUI state
 .env
