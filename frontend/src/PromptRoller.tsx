@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import './roller.css'
 
 type PromptProfile = {
   id:string; label:string; model_family:string; encoder_family:string[]; environment:string; style:string; separator:string;
