@@ -1,0 +1,79 @@
+{
+  "libraries": [
+    {"key":"intent","label":"Intent","group":"A","group_label":"Scene & Intent","priority":100,"placeholder":"What kind of image should this be?","options":[
+      {"value":"a sensual but non-explicit boudoir photograph with realistic intimacy","maturity":"suggestive"},{"value":"a flirtatious fashion portrait with tasteful adult sensuality","maturity":"suggestive"},{"value":"an intimate lifestyle image with clearly adult romantic tension","maturity":"suggestive"},{"value":"a confident glamour portrait with restrained erotic energy","maturity":"suggestive"}
+    ]},
+    {"key":"activity","label":"Activity / Event","group":"A","group_label":"Scene & Intent","priority":98,"placeholder":"What is happening?","options":[
+      {"value":"the clearly adult subject is slowly adjusting a strap or neckline without exposing genitals","maturity":"suggestive"},{"value":"the clearly adult subject is reclining and shifting into a more comfortable sensual pose","maturity":"suggestive"},{"value":"two clearly adult partners are sharing a close embrace with romantic tension","maturity":"suggestive"},{"value":"the clearly adult subject is wrapping or unwrapping a robe while remaining non-explicit","maturity":"suggestive"},{"value":"the clearly adult subject is posing beside a mirror with deliberate but tasteful sensuality","maturity":"suggestive"}
+    ]},
+    {"key":"narrative","label":"Narrative Beat","group":"A","group_label":"Scene & Intent","priority":96,"placeholder":"What should the moment feel like?","options":[
+      {"value":"make the moment feel private, flirtatious, and clearly between consenting adults","maturity":"suggestive"},{"value":"suggest intimacy without depicting explicit sexual activity","maturity":"suggestive"},{"value":"keep the erotic tension grounded in gaze, posture, clothing, and proximity","maturity":"suggestive"},{"value":"favor mature sensuality over exaggerated pornographic posing","maturity":"suggestive"}
+    ]},
+    {"key":"subject","label":"Subject","group":"B","group_label":"Person / Subject","priority":92,"placeholder":"Who or what is the main subject?","options":[
+      {"value":"one clearly adult woman aged 25 or older as the sensual main subject","maturity":"suggestive"},{"value":"one clearly adult man aged 25 or older as the sensual main subject","maturity":"suggestive"},{"value":"one clearly adult person aged 25 or older in an intimate portrait","maturity":"suggestive"},{"value":"two consenting clearly adult partners aged 25 or older sharing the frame","maturity":"suggestive"}
+    ]},
+    {"key":"identity","label":"Identity / Presence","group":"B","group_label":"Person / Subject","priority":90,"placeholder":"Age, character, presence…","options":[
+      {"value":"late twenties, visibly adult, confident and knowingly flirtatious","maturity":"suggestive"},{"value":"early thirties, visibly adult, relaxed and sensually self-possessed","maturity":"suggestive"},{"value":"adult 25+, playful and comfortable with the camera","maturity":"suggestive"},{"value":"adult 25+, elegant presence with restrained erotic confidence","maturity":"suggestive"}
+    ]},
+    {"key":"physical","label":"Physical Detail","group":"B","group_label":"Person / Subject","priority":88,"placeholder":"Hair, build, skin, distinguishing traits…","options":[
+      {"value":"realistic adult anatomy with natural curves, skin folds, and body texture","maturity":"suggestive"},{"value":"natural cleavage and body contours shaped by clothing rather than artificial enhancement","maturity":"suggestive"},{"value":"visible shoulders, collarbone, waist, and thighs with realistic skin texture","maturity":"suggestive"},{"value":"natural body softness, subtle skin sheen, and realistic contact compression","maturity":"suggestive"}
+    ]},
+    {"key":"expression","label":"Expression","group":"B","group_label":"Person / Subject","priority":86,"placeholder":"Expression / gaze…","options":[
+      {"value":"direct flirtatious eye contact with a small confident smile","maturity":"suggestive"},{"value":"a soft bedroom gaze with relaxed eyelids and calm facial tension","maturity":"suggestive"},{"value":"a playful over-the-shoulder glance with clearly adult confidence","maturity":"suggestive"},{"value":"a composed sensual expression without exaggerated open-mouth posing","maturity":"suggestive"},{"value":"eyes briefly lowered with a private amused smile","maturity":"suggestive"}
+    ]},
+    {"key":"pose","label":"Pose / Body Language","group":"B","group_label":"Person / Subject","priority":84,"placeholder":"Pose and body language…","options":[
+      {"value":"reclining on the side with one leg bent and the torso naturally elongated","maturity":"suggestive"},{"value":"sitting on the edge of a bed with relaxed knees and confident upright posture","maturity":"suggestive"},{"value":"kneeling on a bed with natural balance and non-explicit sensual body language","maturity":"suggestive"},{"value":"standing with the back partly toward camera and looking over one shoulder","maturity":"suggestive"},{"value":"lying on the back with one knee raised and arms resting naturally","maturity":"suggestive"},{"value":"leaning against a wall with one leg slightly forward and relaxed shoulders","maturity":"suggestive"},{"value":"seated with legs angled apart in a tasteful non-explicit fashion pose","maturity":"suggestive"}
+    ]},
+    {"key":"wardrobe","label":"Wardrobe","group":"B","group_label":"Person / Subject","priority":82,"placeholder":"Clothing and accessories…","options":[
+      {"value":"a fitted camisole and short lounge shorts with realistic fabric tension","maturity":"suggestive"},{"value":"tasteful adult lingerie with opaque coverage and realistic fit","maturity":"suggestive"},{"value":"a satin robe worn loosely over covered lingerie","maturity":"suggestive"},{"value":"a fitted bodysuit with full intimate-area coverage","maturity":"suggestive"},{"value":"a bikini or two-piece swimsuit styled as an adult glamour portrait","maturity":"suggestive"},{"value":"an oversized button-up shirt worn over opaque underwear","maturity":"suggestive"},{"value":"a fitted crop top with a low neckline and high-waisted bottoms","maturity":"suggestive"}
+    ]},
+    {"key":"environment","label":"Environment","group":"C","group_label":"Environment","priority":78,"placeholder":"Primary location…","options":[
+      {"value":"a softly lit adult bedroom with rumpled neutral bedding","maturity":"suggestive"},{"value":"a private hotel room with warm practical lighting","maturity":"suggestive"},{"value":"a tasteful dressing room with a full-length mirror","maturity":"suggestive"},{"value":"a private poolside cabana with soft late-afternoon light","maturity":"suggestive"},{"value":"a quiet bathroom vanity area with diffused mirror light","maturity":"suggestive"}
+    ]},
+    {"key":"background","label":"Background Structure","group":"C","group_label":"Environment","priority":76,"placeholder":"Architecture, depth layers, background…","options":[
+      {"value":"use bedding, curtains, and soft upholstery as layered intimate background shapes","maturity":"suggestive"},{"value":"keep the private-room background uncluttered and mature rather than decorative","maturity":"suggestive"},{"value":"use a mirror as a secondary compositional element without revealing unintended anatomy","maturity":"suggestive"}
+    ]},
+    {"key":"weather_time","label":"Time / Weather","group":"C","group_label":"Environment","priority":74,"placeholder":"Time of day, season, weather…","options":[
+      {"value":"late evening with warm bedside light and cool city ambience","maturity":"suggestive"},{"value":"slow golden-hour light entering a private room","maturity":"suggestive"},{"value":"soft overcast morning light through sheer bedroom curtains","maturity":"suggestive"}
+    ]},
+    {"key":"primary_prop","label":"Primary Object","group":"D","group_label":"Objects & Scene Detail","priority":68,"placeholder":"Main prop / object…","options":[
+      {"value":"a full-length mirror supporting the sensual composition","maturity":"suggestive"},{"value":"a satin robe being held or draped naturally","maturity":"suggestive"},{"value":"a pillow used as a natural support for the reclining pose","maturity":"suggestive"},{"value":"a chair or stool used for an adult glamour pose","maturity":"suggestive"}
+    ]},
+    {"key":"secondary_prop","label":"Secondary Object","group":"D","group_label":"Objects & Scene Detail","priority":66,"placeholder":"Supporting prop…","options":[
+      {"value":"subtle adult jewelry and a hair tie on a nearby surface","maturity":"suggestive"},{"value":"a pair of stockings or a folded garment placed casually nearby","maturity":"suggestive"},{"value":"a glass of water and small bedside lamp","maturity":"suggestive"}
+    ]},
+    {"key":"foreground","label":"Foreground Accent","group":"D","group_label":"Objects & Scene Detail","priority":64,"placeholder":"Foreground depth cue…","options":[
+      {"value":"soft bedding entering the lower foreground without obscuring anatomy","maturity":"suggestive"},{"value":"a blurred curtain edge that makes the scene feel private and observed","maturity":"suggestive"}
+    ]},
+    {"key":"framing","label":"Framing","group":"E","group_label":"Composition & Capture","priority":58,"placeholder":"Shot size…","options":[
+      {"value":"mid-thigh adult glamour portrait emphasizing pose and clothing","maturity":"suggestive"},{"value":"knees-up boudoir framing with clear body language","maturity":"suggestive"},{"value":"full-body sensual portrait with natural negative space","maturity":"suggestive"},{"value":"waist-up intimate portrait emphasizing gaze and upper-body posture","maturity":"suggestive"}
+    ]},
+    {"key":"camera","label":"Camera / Lens / Angle","group":"E","group_label":"Composition & Capture","priority":56,"placeholder":"Angle and lens character…","options":[
+      {"value":"70mm-equivalent adult glamour perspective from near eye level","maturity":"suggestive"},{"value":"50mm-equivalent lens from slightly below eye level without distorting anatomy","maturity":"suggestive"},{"value":"85mm-equivalent lens with gentle compression and intimate camera distance","maturity":"suggestive"}
+    ]},
+    {"key":"composition","label":"Composition","group":"E","group_label":"Composition & Capture","priority":54,"placeholder":"Placement, balance, depth…","options":[
+      {"value":"use body lines and fabric edges to guide attention without explicit exposure","maturity":"suggestive"},{"value":"balance sensual posture with a clean mature visual hierarchy","maturity":"suggestive"},{"value":"keep anatomy readable and avoid accidental explicit framing","maturity":"suggestive"}
+    ]},
+    {"key":"lighting","label":"Lighting","group":"E","group_label":"Composition & Capture","priority":52,"placeholder":"Key, fill, practicals…","options":[
+      {"value":"soft side light shaping adult body contours without losing skin texture","maturity":"suggestive"},{"value":"warm low-key bedroom lighting with subtle negative fill","maturity":"suggestive"},{"value":"diffused window light with gentle highlights along shoulders and legs","maturity":"suggestive"},{"value":"soft backlight through sheer curtains with natural bounced fill","maturity":"suggestive"}
+    ]},
+    {"key":"texture","label":"Texture / Material","group":"F","group_label":"Finish & Constraints","priority":46,"placeholder":"Surface rendering…","options":[
+      {"value":"preserve realistic adult skin texture, lingerie fabric, seams, and pressure marks","maturity":"suggestive"},{"value":"render satin, lace, cotton, skin, and hair as physically distinct materials","maturity":"suggestive"}
+    ]},
+    {"key":"mood","label":"Mood","group":"F","group_label":"Finish & Constraints","priority":44,"placeholder":"Emotional finish…","options":[
+      {"value":"sensual, private, confident, and clearly adult","maturity":"suggestive"},{"value":"flirtatious and playful without becoming explicit","maturity":"suggestive"},{"value":"warm, intimate, and mature","maturity":"suggestive"},{"value":"elegant adult glamour with restrained erotic energy","maturity":"suggestive"}
+    ]},
+    {"key":"color","label":"Color Palette","group":"F","group_label":"Finish & Constraints","priority":42,"placeholder":"Palette / contrast…","options":[
+      {"value":"warm skin tones, cream bedding, and muted burgundy accents","maturity":"suggestive"},{"value":"soft black, charcoal, and warm amber with realistic skin color","maturity":"suggestive"}
+    ]},
+    {"key":"style","label":"Visual Style","group":"F","group_label":"Finish & Constraints","priority":40,"placeholder":"Rendering style…","options":[
+      {"value":"tasteful adult boudoir photography with realistic anatomy","maturity":"suggestive"},{"value":"mature glamour editorial photography with restrained sensuality","maturity":"suggestive"},{"value":"intimate lifestyle photography with non-explicit erotic tension","maturity":"suggestive"}
+    ]},
+    {"key":"technical","label":"Technical Finish","group":"F","group_label":"Finish & Constraints","priority":38,"placeholder":"Depth, detail, rendering behavior…","options":[
+      {"value":"maintain realistic adult anatomy, garment contact, and body-to-surface compression","maturity":"suggestive"},{"value":"keep hands, breasts under clothing, hips, thighs, and fabric boundaries anatomically coherent","maturity":"suggestive"}
+    ]},
+    {"key":"constraints","label":"Avoid / Constraints","group":"F","group_label":"Finish & Constraints","priority":36,"placeholder":"What should the result avoid?","options":[
+      {"value":"all human subjects must be clearly adult 25+; avoid youthful or ambiguous-age styling","maturity":"suggestive"},{"value":"avoid explicit sexual acts, visible genitals, and pornographic framing","maturity":"suggestive"},{"value":"avoid exaggerated anatomy, fetishized distortion, and impossible garment behavior","maturity":"suggestive"}
+    ]}
+  ]
+}
