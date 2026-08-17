@@ -55,19 +55,34 @@ class CoreSmokeTests(unittest.TestCase):
         self.assertEqual(first.values, second.values)
         self.assertEqual(first.values["environment"], "my locked room")
 
-    def test_qwen_master_uses_a_to_f_structure(self):
+    def test_prompt_library_has_tiered_content_and_sfw_roll_stays_sfw(self):
+        libraries = {library.key: library for library in load_libraries()}
+        maturities = {option.maturity for library in libraries.values() for option in library.options}
+        self.assertEqual(maturities, {"sfw", "suggestive", "adult"})
+        request = RollRequest(seed=7, library_keys=list(libraries), content_level="sfw")
+        result = roll_libraries(request)
+        for key, value in result.values.items():
+            option = next(option for option in libraries[key].options if option.value == value)
+            self.assertEqual(option.maturity, "sfw")
+
+    def test_qwen_master_is_clean_prompt_only(self):
         request = ComposeRequest.model_validate({"profile_id": "qwen3-vl-4b-instruct", "drawers": [
             {"key": "intent", "text": "a cinematic portrait"},
-            {"key": "subject", "text": "one adult woman"},
+            {"key": "subject", "text": "one clearly adult woman"},
             {"key": "environment", "text": "a rainy balcony"},
             {"key": "primary_prop", "text": "a ceramic mug"},
             {"key": "camera", "text": "50mm eye-level"},
             {"key": "style", "text": "natural photographic realism"},
         ]})
         result = compose_prompt(request)
-        for section in ["A — Scene & Intent", "B — Person / Subject", "C — Environment", "D — Objects & Scene Detail", "E — Composition & Capture", "F — Finish & Constraints"]:
-            self.assertIn(section, result.master_prompt)
-        self.assertIn("Return only the finished image-generation prompt", result.master_prompt)
+        self.assertIn("a cinematic portrait", result.master_prompt)
+        self.assertIn("one clearly adult woman", result.master_prompt)
+        self.assertIn("50mm eye-level", result.master_prompt)
+        self.assertNotIn("A —", result.master_prompt)
+        self.assertNotIn("OUTPUT RULE", result.master_prompt)
+        self.assertNotIn("You are a visual prompt architect", result.master_prompt)
+        self.assertNotIn("\n", result.master_prompt)
+        self.assertTrue(result.master_prompt.endswith("."))
 
 
 if __name__ == "__main__": unittest.main()
