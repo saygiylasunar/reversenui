@@ -1,0 +1,21 @@
+{
+  "id": "qwen3-vl-4b-instruct",
+  "label": "Qwen3-VL 4B Instruct · Prompt Planner",
+  "model_family": "qwen3-vl",
+  "encoder_family": [],
+  "environment": "local-vlm",
+  "style": "structured-natural-language",
+  "separator": "\n",
+  "ordering": [
+    "intent", "activity", "narrative",
+    "subject", "identity", "physical", "expression", "pose", "wardrobe",
+    "environment", "background", "weather_time",
+    "primary_prop", "secondary_prop", "foreground",
+    "framing", "camera", "composition", "lighting",
+    "texture", "mood", "color", "style", "technical", "constraints"
+  ],
+  "capabilities": {
+    "negative_prompt": false,
+    "numeric_weights": false
+  }
+}
