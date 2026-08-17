@@ -7,8 +7,8 @@ from PIL import Image, PngImagePlugin
 from app.core.artifacts.inspector import inspect_artifact
 from app.core.output.models import OutputRecipe
 from app.core.output.processor import process_image
-from app.core.prompt.engine import compose_prompt
-from app.core.prompt.models import ComposeRequest
+from app.core.prompt.engine import compose_prompt, load_libraries, roll_libraries
+from app.core.prompt.models import ComposeRequest, RollRequest
 from app.integrations.comfyui.client import _match, _normalize_base_url
 
 
@@ -46,6 +46,28 @@ class CoreSmokeTests(unittest.TestCase):
         result = compose_prompt(request)
         self.assertEqual(result.master_prompt, "woman, (golden hour:1.20)")
         self.assertEqual(result.negative_prompt, "blurry")
+
+    def test_prompt_roller_is_seeded_and_preserves_locks(self):
+        self.assertGreater(len(load_libraries()), 10)
+        request = RollRequest(seed=42, library_keys=["intent", "environment", "camera"], locked={"environment": "my locked room"})
+        first = roll_libraries(request)
+        second = roll_libraries(request)
+        self.assertEqual(first.values, second.values)
+        self.assertEqual(first.values["environment"], "my locked room")
+
+    def test_qwen_master_uses_a_to_f_structure(self):
+        request = ComposeRequest.model_validate({"profile_id": "qwen3-vl-4b-instruct", "drawers": [
+            {"key": "intent", "text": "a cinematic portrait"},
+            {"key": "subject", "text": "one adult woman"},
+            {"key": "environment", "text": "a rainy balcony"},
+            {"key": "primary_prop", "text": "a ceramic mug"},
+            {"key": "camera", "text": "50mm eye-level"},
+            {"key": "style", "text": "natural photographic realism"},
+        ]})
+        result = compose_prompt(request)
+        for section in ["A — Scene & Intent", "B — Person / Subject", "C — Environment", "D — Objects & Scene Detail", "E — Composition & Capture", "F — Finish & Constraints"]:
+            self.assertIn(section, result.master_prompt)
+        self.assertIn("Return only the finished image-generation prompt", result.master_prompt)
 
 
 if __name__ == "__main__": unittest.main()
