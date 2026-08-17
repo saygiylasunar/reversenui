@@ -34,16 +34,23 @@ $SystemPython = Resolve-SystemPython
 if (-not (Get-Command node -ErrorAction SilentlyContinue) -or -not (Get-Command npm -ErrorAction SilentlyContinue)) {
   throw @'
 Node.js/npm was not found.
-Install an LTS version of Node.js (Node 22+ recommended) from:
+Install Node.js 20.19+ or 22.12+ from:
 https://nodejs.org/en/download
 Then close this window and run ReversenUI.bat again.
 '@
 }
 
-$NodeMajor = [int]((& node -p "process.versions.node").Split('.')[0])
-if ($NodeMajor -lt 22) {
-  throw "Node.js 22+ is required for the development launcher. Installed major version: $NodeMajor"
+$NodeVersionRaw = (& node -p "process.versions.node").Trim()
+$NodeParts = $NodeVersionRaw.Split('.')
+$NodeMajor = [int]$NodeParts[0]
+$NodeMinor = [int]$NodeParts[1]
+$NodePatch = [int]$NodeParts[2]
+$NodeSupported = (($NodeMajor -eq 20) -and ($NodeMinor -ge 19)) -or (($NodeMajor -eq 22) -and ($NodeMinor -ge 12)) -or ($NodeMajor -gt 22)
+if (-not $NodeSupported) {
+  throw "Vite 8 requires Node.js 20.19+ or 22.12+. Installed version: $NodeVersionRaw"
 }
+
+Write-Host ("[ReversenUI] Node.js " + $NodeVersionRaw + " OK") -ForegroundColor DarkGray
 
 $VenvPython = Join-Path $Root 'backend\.venv\Scripts\python.exe'
 if (-not (Test-Path $VenvPython)) {
