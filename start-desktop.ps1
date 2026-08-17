@@ -73,6 +73,31 @@ finally {
   Pop-Location
 }
 
+# Source mode must show the freshly built Vite bundle. Electron's persistent
+# ReversenUI partition can otherwise keep an older index/assets cache alive.
+Write-Host '[ReversenUI] Refreshing local UI cache...' -ForegroundColor DarkGray
+$UserDataRoots = @(
+  (Join-Path $env:APPDATA 'ReversenUI'),
+  (Join-Path $env:APPDATA 'reversenui-desktop')
+)
+$CachePaths = @(
+  'Cache',
+  'Code Cache',
+  'GPUCache',
+  'Partitions\reversenui-reversenui\Cache',
+  'Partitions\reversenui-reversenui\Code Cache',
+  'Partitions\reversenui-reversenui\GPUCache',
+  'Partitions\reversenui-reversenui\Service Worker\CacheStorage'
+)
+foreach ($UserDataRoot in $UserDataRoots) {
+  foreach ($RelativeCache in $CachePaths) {
+    $Target = Join-Path $UserDataRoot $RelativeCache
+    if (Test-Path $Target) {
+      Remove-Item $Target -Recurse -Force -ErrorAction SilentlyContinue
+    }
+  }
+}
+
 Write-Host '[3/4] Installing/updating Electron desktop dependencies...' -ForegroundColor Cyan
 Push-Location desktop
 try {
