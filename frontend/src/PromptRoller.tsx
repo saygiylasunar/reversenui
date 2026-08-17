@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
 import './roller.css'
 
 type PromptProfile = {
@@ -19,7 +18,6 @@ async function jsonOrError(response:Response){
 
 export default function PromptRoller(){
   const [open,setOpen]=useState(false)
-  const [navTarget,setNavTarget]=useState<Element|null>(null)
   const [profiles,setProfiles]=useState<PromptProfile[]>([])
   const [profileId,setProfileId]=useState('qwen3-vl-4b-instruct')
   const [libraries,setLibraries]=useState<PromptLibrary[]>([])
@@ -32,7 +30,6 @@ export default function PromptRoller(){
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
 
-  useEffect(()=>{setNavTarget(document.querySelector('.sidebar nav'))},[])
   useEffect(()=>{
     Promise.all([
       fetch('/api/prompt/profiles').then(jsonOrError),
@@ -80,11 +77,11 @@ export default function PromptRoller(){
   function toggleLock(key:string){setLocked(current=>({...current,[key]:!current[key]}))}
   function clearUnlocked(){const next={...values};for(const library of libraries)if(!locked[library.key])next[library.key]='';setValues(next);setMaster('');setNegative('')}
 
-  const navButton=<button className={open?'nav-item active roller-nav':'nav-item roller-nav'} onClick={()=>setOpen(true)}><strong>Prompt Dice</strong><span>Qwen Builder · A→F roller</span></button>
-
   return <>
-    {navTarget&&createPortal(navButton,navTarget)}
-    {!navTarget&&<button className="roller-launch" onClick={()=>setOpen(true)}>🎲 PROMPT DICE</button>}
+    <button className={open?'roller-launch active':'roller-launch'} onClick={()=>setOpen(true)}>
+      <strong>Prompt Dice</strong>
+      <span>Qwen Builder · A→F roller</span>
+    </button>
     {open&&<div className="roller-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setOpen(false)}}>
       <section className="roller-shell">
         <header className="roller-head">
