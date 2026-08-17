@@ -1,5 +1,6 @@
 import json
 import random
+import re
 import secrets
 from functools import lru_cache
 from pathlib import Path
@@ -7,6 +8,7 @@ from pathlib import Path
 from app.core.prompt.models import (
     ComposeRequest,
     ComposeResponse,
+    PromptContentLevel,
     PromptLibrary,
     PromptProfile,
     RollRequest,
@@ -27,6 +29,8 @@ QWEN_SECTIONS = [
     ("E", "Composition & Capture", ["framing", "camera", "composition", "lighting"]),
     ("F", "Finish & Constraints", ["texture", "mood", "color", "style", "technical", "constraints"]),
 ]
+
+CONTENT_LEVEL_RANK: dict[PromptContentLevel, int] = {"sfw": 0, "suggestive": 1, "adult": 2}
 
 
 def _profiles_directory() -> Path:
@@ -56,13 +60,24 @@ def load_libraries() -> list[PromptLibrary]:
     libraries: dict[str, PromptLibrary] = {}
     directory = _libraries_directory()
     if directory.exists():
-        for path in directory.glob("*.json"):
+        for path in sorted(directory.glob("*.json")):
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
                 rows = payload if isinstance(payload, list) else payload.get("libraries", [])
                 for raw in rows:
                     library = PromptLibrary.model_validate(raw)
-                    libraries[library.key] = library
+                    existing = libraries.get(library.key)
+                    if existing is None:
+                        libraries[library.key] = library
+                        continue
+                    merged = list(existing.options)
+                    seen = {(item.value.strip().lower(), item.maturity) for item in merged}
+                    for option in library.options:
+                        marker = (option.value.strip().lower(), option.maturity)
+                        if marker not in seen:
+                            merged.append(option)
+                            seen.add(marker)
+                    libraries[library.key] = existing.model_copy(update={"options": merged})
             except Exception:
                 continue
     return sorted(libraries.values(), key=lambda item: (-item.priority, item.group, item.label.lower()))
@@ -84,30 +99,36 @@ def _render(text: str, emphasis: float, supports_weights: bool) -> str:
     return clean
 
 
+def _clean_prompt_fragment(text: str) -> str:
+    clean = text.replace("\r", "\n")
+    clean = re.sub(r"(?m)^\s*(?:#{1,6}\s*|[-*•]\s+)", "", clean)
+    clean = re.sub(r"(?im)^\s*(?:[A-F]\s*[—–:\-]\s*)?(?:scene\s*&\s*intent|person\s*/\s*subject|environment|objects\s*&\s*scene\s*detail|composition\s*&\s*capture|finish\s*&\s*constraints|output\s*rule)\s*[:—–\-]*\s*$", "", clean)
+    clean = re.sub(r"\s+", " ", clean).strip(" \t\n,;.-")
+    return clean
+
+
 def _compose_qwen(profile: PromptProfile, request: ComposeRequest) -> ComposeResponse:
-    values = {drawer.key: drawer.text.strip() for drawer in request.drawers if drawer.enabled and drawer.text.strip()}
-    lines = [
-        "You are a visual prompt architect. Convert the structured scene specification below into one coherent image-generation prompt.",
-        "Respect the priority order A → F. Preserve explicit facts and spatial relationships. Do not add contradictory people, objects, locations, camera choices, or lighting.",
-        "Use concrete natural language rather than tag soup or numeric weighting syntax.",
-        "",
-    ]
+    values = {
+        drawer.key: _clean_prompt_fragment(drawer.text)
+        for drawer in request.drawers
+        if drawer.enabled and drawer.text.strip()
+    }
+    values = {key: value for key, value in values.items() if value}
     ordered: list[str] = []
-    for code, label, keys in QWEN_SECTIONS:
-        section = []
+    sentences: list[str] = []
+    for _code, _label, keys in QWEN_SECTIONS:
+        section: list[str] = []
         for key in keys:
-            if key in values:
-                section.append(values[key])
+            value = values.get(key)
+            if value:
+                section.append(value)
                 ordered.append(key)
         if section:
-            lines.append(f"{code} — {label}")
-            lines.append("; ".join(section))
-            lines.append("")
-    lines.extend([
-        "OUTPUT RULE",
-        "Return only the finished image-generation prompt as one polished paragraph. Do not include analysis, headings, bullet points, alternatives, or commentary.",
-    ])
-    return ComposeResponse(profile_id=profile.id, master_prompt="\n".join(lines).strip(), negative_prompt="", ordered_drawers=ordered)
+            sentences.append("; ".join(section))
+    master = ". ".join(sentence.rstrip(" .;,") for sentence in sentences if sentence.strip())
+    if master:
+        master += "."
+    return ComposeResponse(profile_id=profile.id, master_prompt=master, negative_prompt="", ordered_drawers=ordered)
 
 
 def compose_prompt(request: ComposeRequest) -> ComposeResponse:
@@ -134,11 +155,13 @@ def compose_prompt(request: ComposeRequest) -> ComposeResponse:
     return ComposeResponse(profile_id=profile.id, master_prompt=profile.separator.join(positive), negative_prompt=profile.separator.join(negative), ordered_drawers=ordered)
 
 
-def _weighted_pick(rng: random.Random, library: PromptLibrary) -> str:
-    if not library.options:
+def _weighted_pick(rng: random.Random, library: PromptLibrary, content_level: PromptContentLevel) -> str:
+    rank = CONTENT_LEVEL_RANK[content_level]
+    eligible = [item for item in library.options if CONTENT_LEVEL_RANK[item.maturity] <= rank]
+    if not eligible:
         return ""
-    options = [item.value for item in library.options]
-    weights = [item.weight for item in library.options]
+    options = [item.value for item in eligible]
+    weights = [item.weight for item in eligible]
     return rng.choices(options, weights=weights, k=1)[0]
 
 
@@ -154,5 +177,5 @@ def roll_libraries(request: RollRequest) -> RollResponse:
             continue
         library = available.get(key)
         if library:
-            values[key] = _weighted_pick(rng, library)
+            values[key] = _weighted_pick(rng, library, request.content_level)
     return RollResponse(seed=seed, values=values)
