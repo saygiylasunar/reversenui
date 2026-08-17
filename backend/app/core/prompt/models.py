@@ -36,3 +36,29 @@ class ComposeResponse(BaseModel):
     master_prompt: str
     negative_prompt: str
     ordered_drawers: list[str] = Field(default_factory=list)
+
+
+class PromptLibraryOption(BaseModel):
+    value: str
+    weight: int = Field(default=1, ge=1, le=100)
+
+
+class PromptLibrary(BaseModel):
+    key: str
+    label: str
+    group: str
+    group_label: str
+    priority: int = Field(default=50, ge=0, le=100)
+    placeholder: str = ""
+    options: list[PromptLibraryOption] = Field(default_factory=list)
+
+
+class RollRequest(BaseModel):
+    library_keys: list[str] = Field(default_factory=list)
+    locked: dict[str, str] = Field(default_factory=dict)
+    seed: int | None = None
+
+
+class RollResponse(BaseModel):
+    seed: int
+    values: dict[str, str] = Field(default_factory=dict)
