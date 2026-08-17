@@ -1,4 +1,9 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+
+PromptContentLevel = Literal["sfw", "suggestive", "adult"]
 
 
 class PromptCapabilities(BaseModel):
@@ -41,6 +46,7 @@ class ComposeResponse(BaseModel):
 class PromptLibraryOption(BaseModel):
     value: str
     weight: int = Field(default=1, ge=1, le=100)
+    maturity: PromptContentLevel = "sfw"
 
 
 class PromptLibrary(BaseModel):
@@ -57,6 +63,7 @@ class RollRequest(BaseModel):
     library_keys: list[str] = Field(default_factory=list)
     locked: dict[str, str] = Field(default_factory=dict)
     seed: int | None = None
+    content_level: PromptContentLevel = "sfw"
 
 
 class RollResponse(BaseModel):
