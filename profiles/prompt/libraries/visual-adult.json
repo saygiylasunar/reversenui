@@ -1,0 +1,79 @@
+{
+  "libraries": [
+    {"key":"intent","label":"Intent","group":"A","group_label":"Scene & Intent","priority":100,"placeholder":"What kind of image should this be?","options":[
+      {"value":"an adult nude fine-art photograph with realistic anatomy and tasteful composition","maturity":"adult"},{"value":"an explicit-nudity adult boudoir portrait focused on natural body realism","maturity":"adult"},{"value":"a mature erotic glamour photograph featuring clearly adult nudity without depicting a sex act","maturity":"adult"},{"value":"an intimate nude portrait of consenting clearly adult partners without explicit sexual activity","maturity":"adult"}
+    ]},
+    {"key":"activity","label":"Activity / Event","group":"A","group_label":"Scene & Intent","priority":98,"placeholder":"What is happening?","options":[
+      {"value":"the clearly adult subject is posing nude while adjusting posture naturally","maturity":"adult"},{"value":"the clearly adult subject is removing or holding a robe while fully nude beneath it","maturity":"adult"},{"value":"the clearly adult subject is reclining nude and changing position between frames","maturity":"adult"},{"value":"two consenting clearly adult partners are embracing nude without depicting a sex act","maturity":"adult"},{"value":"the clearly adult subject is standing nude near a mirror with relaxed natural body language","maturity":"adult"}
+    ]},
+    {"key":"narrative","label":"Narrative Beat","group":"A","group_label":"Scene & Intent","priority":96,"placeholder":"What should the moment feel like?","options":[
+      {"value":"treat adult nudity as confident, natural, and intentional rather than accidental","maturity":"adult"},{"value":"keep the erotic mood mature and consensual while avoiding depiction of sexual activity","maturity":"adult"},{"value":"focus on body realism, pose, gaze, and atmosphere rather than shock value","maturity":"adult"},{"value":"make the nude scene feel private, self-directed, and clearly adult","maturity":"adult"}
+    ]},
+    {"key":"subject","label":"Subject","group":"B","group_label":"Person / Subject","priority":92,"placeholder":"Who or what is the main subject?","options":[
+      {"value":"one clearly adult woman aged 25 or older as the nude main subject","maturity":"adult"},{"value":"one clearly adult man aged 25 or older as the nude main subject","maturity":"adult"},{"value":"one clearly adult person aged 25 or older in a nude portrait","maturity":"adult"},{"value":"two consenting clearly adult partners aged 25 or older in a nude portrait","maturity":"adult"}
+    ]},
+    {"key":"identity","label":"Identity / Presence","group":"B","group_label":"Person / Subject","priority":90,"placeholder":"Age, character, presence…","options":[
+      {"value":"late twenties, visibly adult, comfortable with nudity and self-assured","maturity":"adult"},{"value":"early thirties, visibly adult, mature and confidently sensual","maturity":"adult"},{"value":"adult 25+, relaxed and natural rather than performative","maturity":"adult"},{"value":"adult 25+, elegant and composed with mature erotic confidence","maturity":"adult"}
+    ]},
+    {"key":"physical","label":"Physical Detail","group":"B","group_label":"Person / Subject","priority":88,"placeholder":"Hair, build, skin, distinguishing traits…","options":[
+      {"value":"fully nude adult body with realistic proportions, skin folds, pores, and natural asymmetry","maturity":"adult"},{"value":"natural adult breasts, torso, hips, and thighs rendered with realistic anatomy and gravity","maturity":"adult"},{"value":"full-frontal adult nudity with anatomically realistic genitals and non-exaggerated proportions","maturity":"adult"},{"value":"rear nude view with realistic back, waist, hips, buttocks, legs, and skin texture","maturity":"adult"},{"value":"natural body hair, skin variation, pressure marks, and subtle imperfections appropriate to an adult body","maturity":"adult"}
+    ]},
+    {"key":"expression","label":"Expression","group":"B","group_label":"Person / Subject","priority":86,"placeholder":"Expression / gaze…","options":[
+      {"value":"direct confident adult eye contact with a calm erotic expression","maturity":"adult"},{"value":"a soft private gaze with relaxed mature sensuality","maturity":"adult"},{"value":"a subtle knowing smile while remaining naturally posed","maturity":"adult"},{"value":"a neutral self-possessed expression that keeps the nude portrait grounded","maturity":"adult"}
+    ]},
+    {"key":"pose","label":"Pose / Body Language","group":"B","group_label":"Person / Subject","priority":84,"placeholder":"Pose and body language…","options":[
+      {"value":"standing nude in a relaxed contrapposto pose with full body visible","maturity":"adult"},{"value":"reclining nude on the side with one knee bent and natural torso compression","maturity":"adult"},{"value":"lying nude on the back with one knee raised and arms placed naturally","maturity":"adult"},{"value":"kneeling nude on a bed with balanced posture and realistic contact points","maturity":"adult"},{"value":"seated nude on the edge of a bed or chair with relaxed legs and upright posture","maturity":"adult"},{"value":"back-facing nude pose with the head turned toward camera","maturity":"adult"},{"value":"full-frontal nude pose with relaxed shoulders and natural weight distribution","maturity":"adult"}
+    ]},
+    {"key":"wardrobe","label":"Wardrobe","group":"B","group_label":"Person / Subject","priority":82,"placeholder":"Clothing and accessories…","options":[
+      {"value":"fully nude with no clothing, using only subtle adult jewelry if appropriate","maturity":"adult"},{"value":"nude beneath an open robe that does not obscure the intended body composition","maturity":"adult"},{"value":"topless with simple bottoms for an adult glamour portrait","maturity":"adult"},{"value":"bottomless with an opaque top for an adult glamour portrait","maturity":"adult"},{"value":"sheer adult lingerie that intentionally reveals the body while remaining realistically fitted","maturity":"adult"}
+    ]},
+    {"key":"environment","label":"Environment","group":"C","group_label":"Environment","priority":78,"placeholder":"Primary location…","options":[
+      {"value":"a private adult bedroom suited to tasteful nude photography","maturity":"adult"},{"value":"a private studio with a simple backdrop and controlled light for nude portraiture","maturity":"adult"},{"value":"a private bathroom or shower area with stone, glass, and soft reflected light","maturity":"adult"},{"value":"a secluded private pool or terrace where adult nudity is contextually plausible","maturity":"adult"},{"value":"a private hotel room with neutral bedding and warm practical light","maturity":"adult"}
+    ]},
+    {"key":"background","label":"Background Structure","group":"C","group_label":"Environment","priority":76,"placeholder":"Architecture, depth layers, background…","options":[
+      {"value":"keep the nude setting private, uncluttered, and free of distracting readable text","maturity":"adult"},{"value":"use bedding, curtains, mirrors, or stone surfaces to support body shape and depth","maturity":"adult"},{"value":"maintain physically correct mirror visibility and reflections around the nude subject","maturity":"adult"}
+    ]},
+    {"key":"weather_time","label":"Time / Weather","group":"C","group_label":"Environment","priority":74,"placeholder":"Time of day, season, weather…","options":[
+      {"value":"soft morning daylight entering a private nude setting","maturity":"adult"},{"value":"late golden-hour sunlight shaping the nude body naturally","maturity":"adult"},{"value":"low-key nighttime interior lighting with warm practicals","maturity":"adult"}
+    ]},
+    {"key":"primary_prop","label":"Primary Object","group":"D","group_label":"Objects & Scene Detail","priority":68,"placeholder":"Main prop / object…","options":[
+      {"value":"a robe or sheet used as a compositional prop without unintentionally covering the nude pose","maturity":"adult"},{"value":"a full-length mirror used to show a second physically consistent view of the adult nude subject","maturity":"adult"},{"value":"a chair, stool, or bed edge supporting the nude pose naturally","maturity":"adult"},{"value":"a pillow or folded blanket creating realistic body-to-surface contact","maturity":"adult"}
+    ]},
+    {"key":"secondary_prop","label":"Secondary Object","group":"D","group_label":"Objects & Scene Detail","priority":66,"placeholder":"Supporting prop…","options":[
+      {"value":"subtle adult jewelry placed or worn naturally","maturity":"adult"},{"value":"a folded robe or garment placed nearby as context","maturity":"adult"},{"value":"a bedside glass, book, or lamp kept secondary to the nude subject","maturity":"adult"}
+    ]},
+    {"key":"foreground","label":"Foreground Accent","group":"D","group_label":"Objects & Scene Detail","priority":64,"placeholder":"Foreground depth cue…","options":[
+      {"value":"a soft sheet or curtain edge creating depth without censoring the intended nude composition","maturity":"adult"},{"value":"a subtle blurred foreground object that preserves clear adult anatomy","maturity":"adult"}
+    ]},
+    {"key":"framing","label":"Framing","group":"E","group_label":"Composition & Capture","priority":58,"placeholder":"Shot size…","options":[
+      {"value":"full-body nude portrait with the entire adult figure readable","maturity":"adult"},{"value":"three-quarter nude portrait showing torso, hips, and upper legs","maturity":"adult"},{"value":"waist-up topless adult portrait emphasizing face, shoulders, and natural chest anatomy","maturity":"adult"},{"value":"rear full-body nude portrait with clear silhouette and environmental context","maturity":"adult"},{"value":"full-frontal adult nude composition with deliberate non-accidental framing","maturity":"adult"}
+    ]},
+    {"key":"camera","label":"Camera / Lens / Angle","group":"E","group_label":"Composition & Capture","priority":56,"placeholder":"Angle and lens character…","options":[
+      {"value":"70mm-equivalent lens at eye level for realistic adult nude proportions","maturity":"adult"},{"value":"50mm-equivalent lens from a neutral viewpoint that avoids anatomical distortion","maturity":"adult"},{"value":"85mm-equivalent lens with gentle compression for adult nude portraiture","maturity":"adult"},{"value":"35mm-equivalent environmental nude portrait from a respectful working distance","maturity":"adult"}
+    ]},
+    {"key":"composition","label":"Composition","group":"E","group_label":"Composition & Capture","priority":54,"placeholder":"Placement, balance, depth…","options":[
+      {"value":"compose the nude adult figure with clear anatomical readability and deliberate negative space","maturity":"adult"},{"value":"use body lines, bedding, and architecture to guide attention without awkward cropping","maturity":"adult"},{"value":"keep breasts, hips, genitals, hands, and limbs spatially coherent when visible","maturity":"adult"},{"value":"avoid accidental censorship by props unless the chosen pose intentionally calls for partial coverage","maturity":"adult"}
+    ]},
+    {"key":"lighting","label":"Lighting","group":"E","group_label":"Composition & Capture","priority":52,"placeholder":"Key, fill, practicals…","options":[
+      {"value":"large soft side light shaping the adult nude body with realistic falloff","maturity":"adult"},{"value":"controlled low-key lighting revealing body form while preserving natural skin detail","maturity":"adult"},{"value":"warm window light with gentle reflected fill across exposed adult skin","maturity":"adult"},{"value":"soft backlight tracing the nude silhouette with enough frontal fill for anatomy","maturity":"adult"}
+    ]},
+    {"key":"texture","label":"Texture / Material","group":"F","group_label":"Finish & Constraints","priority":46,"placeholder":"Surface rendering…","options":[
+      {"value":"preserve realistic exposed adult skin texture, pores, fine body hair, and natural tonal variation","maturity":"adult"},{"value":"render exposed skin, hair, bedding, glass, stone, and fabric with distinct physical texture","maturity":"adult"},{"value":"retain subtle skin sheen and pressure marks only where physically plausible","maturity":"adult"}
+    ]},
+    {"key":"mood","label":"Mood","group":"F","group_label":"Finish & Constraints","priority":44,"placeholder":"Emotional finish…","options":[
+      {"value":"mature, erotic, confident, and clearly adult without depicting sexual activity","maturity":"adult"},{"value":"private, nude, self-assured, and intimate","maturity":"adult"},{"value":"tasteful adult eroticism with natural vulnerability and confidence","maturity":"adult"},{"value":"bold adult glamour with realistic body presence","maturity":"adult"}
+    ]},
+    {"key":"color","label":"Color Palette","group":"F","group_label":"Finish & Constraints","priority":42,"placeholder":"Palette / contrast…","options":[
+      {"value":"natural exposed skin tones against warm neutral bedding and wood","maturity":"adult"},{"value":"soft monochrome neutrals that preserve realistic adult skin color and contrast","maturity":"adult"},{"value":"deep warm shadows and restrained amber highlights on exposed skin","maturity":"adult"}
+    ]},
+    {"key":"style","label":"Visual Style","group":"F","group_label":"Finish & Constraints","priority":40,"placeholder":"Rendering style…","options":[
+      {"value":"adult fine-art nude photography with natural anatomy and restrained polish","maturity":"adult"},{"value":"mature nude boudoir photography with realistic body texture","maturity":"adult"},{"value":"adult erotic editorial photography without depiction of sex acts","maturity":"adult"},{"value":"naturalistic adult nude lifestyle photography in a private setting","maturity":"adult"}
+    ]},
+    {"key":"technical","label":"Technical Finish","group":"F","group_label":"Finish & Constraints","priority":38,"placeholder":"Depth, detail, rendering behavior…","options":[
+      {"value":"maintain anatomically realistic adult breasts, nipples, genitals, hips, hands, feet, and joints when visible","maturity":"adult"},{"value":"preserve realistic gravity, soft-tissue compression, body-to-surface contact, and perspective","maturity":"adult"},{"value":"keep mirrored nude anatomy, reflections, occlusion, and lighting physically consistent","maturity":"adult"}
+    ]},
+    {"key":"constraints","label":"Avoid / Constraints","group":"F","group_label":"Finish & Constraints","priority":36,"placeholder":"What should the result avoid?","options":[
+      {"value":"all human subjects must be clearly adult 25+ and consenting; never depict minors or ambiguous-age subjects","maturity":"adult"},{"value":"avoid sexual acts, coercive context, injury, or non-consensual framing; keep the scene adult nude portraiture","maturity":"adult"},{"value":"avoid exaggerated genital or breast anatomy, impossible body proportions, and fetishized distortion","maturity":"adult"},{"value":"avoid accidental extra limbs, duplicated anatomy, malformed hands, inconsistent nipples, and broken reflections","maturity":"adult"}
+    ]}
+  ]
+}
