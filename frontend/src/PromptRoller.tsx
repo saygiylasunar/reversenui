@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './roller.css'
 
 type PromptProfile = {
@@ -7,9 +8,7 @@ type PromptProfile = {
 }
 type LibraryOption = { value:string; weight:number }
 type PromptLibrary = { key:string;label:string;group:string;group_label:string;priority:number;placeholder:string;options:LibraryOption[] }
-
 type RollResult = { seed:number; values:Record<string,string> }
-
 type ComposeResult = { master_prompt:string;negative_prompt:string;ordered_drawers:string[] }
 
 async function jsonOrError(response:Response){
@@ -20,6 +19,7 @@ async function jsonOrError(response:Response){
 
 export default function PromptRoller(){
   const [open,setOpen]=useState(false)
+  const [navTarget,setNavTarget]=useState<Element|null>(null)
   const [profiles,setProfiles]=useState<PromptProfile[]>([])
   const [profileId,setProfileId]=useState('qwen3-vl-4b-instruct')
   const [libraries,setLibraries]=useState<PromptLibrary[]>([])
@@ -32,6 +32,7 @@ export default function PromptRoller(){
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
 
+  useEffect(()=>{setNavTarget(document.querySelector('.sidebar nav'))},[])
   useEffect(()=>{
     Promise.all([
       fetch('/api/prompt/profiles').then(jsonOrError),
@@ -59,9 +60,7 @@ export default function PromptRoller(){
   }
 
   async function compile(nextValues:Record<string,string>){
-    const drawers=libraries.map(library=>({
-      key:library.key,text:nextValues[library.key]??'',enabled:Boolean((nextValues[library.key]??'').trim()),priority:library.priority,emphasis:1,
-    }))
+    const drawers=libraries.map(library=>({key:library.key,text:nextValues[library.key]??'',enabled:Boolean((nextValues[library.key]??'').trim()),priority:library.priority,emphasis:1}))
     const response=await fetch('/api/prompt/compose',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_id:profileId,drawers})})
     const result:ComposeResult=await jsonOrError(response)
     setMaster(result.master_prompt);setNegative(result.negative_prompt)
@@ -81,15 +80,17 @@ export default function PromptRoller(){
   function toggleLock(key:string){setLocked(current=>({...current,[key]:!current[key]}))}
   function clearUnlocked(){const next={...values};for(const library of libraries)if(!locked[library.key])next[library.key]='';setValues(next);setMaster('');setNegative('')}
 
+  const navButton=<button className={open?'nav-item active roller-nav':'nav-item roller-nav'} onClick={()=>setOpen(true)}><strong>Prompt Dice</strong><span>Qwen Builder · A→F roller</span></button>
+
   return <>
-    <button className="roller-launch" onClick={()=>setOpen(true)}>🎲 PROMPT DICE</button>
+    {navTarget&&createPortal(navButton,navTarget)}
+    {!navTarget&&<button className="roller-launch" onClick={()=>setOpen(true)}>🎲 PROMPT DICE</button>}
     {open&&<div className="roller-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setOpen(false)}}>
       <section className="roller-shell">
         <header className="roller-head">
-          <div><span className="eyebrow">REVERSENUI / PROMPT DICE</span><h2>A → F Visual Prompt Roller</h2></div>
+          <div><span className="eyebrow">REVERSENUI / QWEN BUILDER</span><h2>A → F Visual Prompt Roller</h2></div>
           <button className="roller-close" onClick={()=>setOpen(false)}>×</button>
         </header>
-
         <div className="roller-toolbar">
           <label>Target profile<select value={profileId} onChange={event=>setProfileId(event.target.value)}>{profiles.map(profile=><option value={profile.id} key={profile.id}>{profile.label}</option>)}</select></label>
           <label>Last seed<input type="number" value={seed??''} placeholder="auto" onChange={event=>setSeed(event.target.value?Number(event.target.value):null)}/></label>
@@ -97,31 +98,25 @@ export default function PromptRoller(){
           <button className="primary roller-main" disabled={busy||!libraries.length} onClick={()=>void roll(libraries.map(item=>item.key))}>{busy?'ROLLING…':'🎲 ROLL ALL'}</button>
           <button className="secondary roller-clear" onClick={clearUnlocked}>CLEAR UNLOCKED</button>
         </div>
-
         {profileId==='qwen3-vl-4b-instruct'&&<div className="roller-note">Qwen3‑VL mode uses explicit natural-language A→F scene specification; numeric prompt weights are intentionally not emitted.</div>}
         {error&&<div className="notice error">{error}</div>}
-
         <div className="roller-body">
           <div className="roller-groups">
             {groups.map(([group,entry])=><article className="roller-group" key={group}>
               <div className="roller-group-head"><div><strong>{group}</strong><span>{entry.label}</span></div><button className="secondary compact" onClick={()=>void roll(entry.items.map(item=>item.key))}>ROLL {group}</button></div>
               <div className="roller-fields">
-                {entry.items.map(library=>{
-                  const listId=`roller-${library.key}`
-                  return <div className={`roller-field ${locked[library.key]?'locked':''}`} key={library.key}>
-                    <div className="roller-field-title"><span>{library.label}</span><small>P{library.priority}</small></div>
-                    <div className="roller-input-row">
-                      <button title="Roll this library" disabled={locked[library.key]} onClick={()=>void roll([library.key])}>🎲</button>
-                      <input list={listId} value={values[library.key]??''} placeholder={library.placeholder} onChange={event=>patch(library.key,event.target.value)}/>
-                      <button className={locked[library.key]?'lock active':'lock'} title={locked[library.key]?'Unlock':'Lock'} onClick={()=>toggleLock(library.key)}>{locked[library.key]?'🔒':'🔓'}</button>
-                      <datalist id={listId}>{library.options.map((option,index)=><option value={option.value} key={`${library.key}-${index}`}/>)}</datalist>
-                    </div>
+                {entry.items.map(library=>{const listId=`roller-${library.key}`;return <div className={`roller-field ${locked[library.key]?'locked':''}`} key={library.key}>
+                  <div className="roller-field-title"><span>{library.label}</span><small>P{library.priority}</small></div>
+                  <div className="roller-input-row">
+                    <button title="Roll this library" disabled={locked[library.key]} onClick={()=>void roll([library.key])}>🎲</button>
+                    <input list={listId} value={values[library.key]??''} placeholder={library.placeholder} onChange={event=>patch(library.key,event.target.value)}/>
+                    <button className={locked[library.key]?'lock active':'lock'} title={locked[library.key]?'Unlock':'Lock'} onClick={()=>toggleLock(library.key)}>{locked[library.key]?'🔒':'🔓'}</button>
+                    <datalist id={listId}>{library.options.map((option,index)=><option value={option.value} key={`${library.key}-${index}`}/>)}</datalist>
                   </div>
-                })}
+                </div>})}
               </div>
             </article>)}
           </div>
-
           <aside className="roller-master">
             <div className="roller-master-head"><div><span className="card-label">MASTER</span><strong>{profiles.find(item=>item.id===profileId)?.label??profileId}</strong></div><span>{seed?`seed ${seed}`:'unrolled'}</span></div>
             <textarea value={master} readOnly placeholder="Roll fields or type your own values, then build the Master Prompt."/>
