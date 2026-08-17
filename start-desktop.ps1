@@ -29,6 +29,21 @@ Then close this window and run ReversenUI.bat again.
 '@
 }
 
+function Stop-StaleCore {
+  Write-Host '[ReversenUI] Checking localhost:8765...' -ForegroundColor DarkGray
+  $listeners = @(Get-NetTCPConnection -LocalPort 8765 -State Listen -ErrorAction SilentlyContinue)
+  foreach ($listener in $listeners) {
+    $ownerPid = [int]$listener.OwningProcess
+    if ($ownerPid -gt 0 -and $ownerPid -ne $PID) {
+      $process = Get-CimInstance Win32_Process -Filter "ProcessId = $ownerPid" -ErrorAction SilentlyContinue
+      $description = if ($process) { "$($process.Name) $($process.CommandLine)" } else { "PID $ownerPid" }
+      Write-Host ("[ReversenUI] Stopping stale process on 8765: " + $description) -ForegroundColor Yellow
+      Stop-Process -Id $ownerPid -Force -ErrorAction SilentlyContinue
+    }
+  }
+  if ($listeners.Count -gt 0) { Start-Sleep -Milliseconds 700 }
+}
+
 $SystemPython = Resolve-SystemPython
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue) -or -not (Get-Command npm -ErrorAction SilentlyContinue)) {
@@ -44,13 +59,13 @@ $NodeVersionRaw = (& node -p "process.versions.node").Trim()
 $NodeParts = $NodeVersionRaw.Split('.')
 $NodeMajor = [int]$NodeParts[0]
 $NodeMinor = [int]$NodeParts[1]
-$NodePatch = [int]$NodeParts[2]
 $NodeSupported = (($NodeMajor -eq 20) -and ($NodeMinor -ge 19)) -or (($NodeMajor -eq 22) -and ($NodeMinor -ge 12)) -or ($NodeMajor -gt 22)
 if (-not $NodeSupported) {
   throw "Vite 8 requires Node.js 20.19+ or 22.12+. Installed version: $NodeVersionRaw"
 }
-
 Write-Host ("[ReversenUI] Node.js " + $NodeVersionRaw + " OK") -ForegroundColor DarkGray
+
+Stop-StaleCore
 
 $VenvPython = Join-Path $Root 'backend\.venv\Scripts\python.exe'
 if (-not (Test-Path $VenvPython)) {
@@ -68,13 +83,19 @@ try {
   npm install --no-audit --no-fund
   Write-Host '[2/4] Building frontend...' -ForegroundColor Cyan
   npm run build
+
+  $bundleFiles = @(Get-ChildItem -Path '.\dist\assets' -Filter '*.js' -File -ErrorAction SilentlyContinue)
+  if ($bundleFiles.Count -eq 0) { throw 'Frontend build produced no JavaScript bundle.' }
+  $diceMarker = Select-String -Path ($bundleFiles.FullName) -Pattern 'Qwen Builder|PROMPT DICE|Prompt Dice' -Quiet
+  if (-not $diceMarker) {
+    throw 'Fresh frontend bundle does not contain Prompt Dice / Qwen Builder. Source integration is missing.'
+  }
+  Write-Host '[ReversenUI] Fresh bundle verified: Prompt Dice present.' -ForegroundColor Green
 }
 finally {
   Pop-Location
 }
 
-# Source mode must show the freshly built Vite bundle. Electron's persistent
-# ReversenUI partition can otherwise keep an older index/assets cache alive.
 Write-Host '[ReversenUI] Refreshing local UI cache...' -ForegroundColor DarkGray
 $UserDataRoots = @(
   (Join-Path $env:APPDATA 'ReversenUI'),
