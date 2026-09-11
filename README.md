@@ -38,6 +38,26 @@ The Electron shell treats ReversenUI and local tools as independent workspace ta
 - Custom localhost web-tool registry.
 - Vault / Secure Notes with OS-backed Electron `safeStorage` encryption plus a cryptographic password generator.
 
+## Architecture boundaries
+
+ReversenUI should remain a **workbench shell**, not a monolithic replacement for every local AI tool.
+
+```text
+ReversenUI core
+├─ Inspector
+├─ Prompt Architect
+├─ Output pipeline
+└─ Desktop workspace shell
+
+External providers
+├─ ComfyUI
+├─ Ostris AI Toolkit
+├─ Jupyter
+└─ TensorBoard / custom localhost tools
+```
+
+Provider-specific behavior belongs in adapters, registry entries or launch configuration. Core UI and processing logic should not depend on one provider being installed.
+
 ## Start on Windows
 Prerequisites: **Python 3.11+** and **Node.js/npm**.
 
