@@ -2,6 +2,13 @@ $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 
+# Keep accidental credentials out of Git. Hooks are local to this clone.
+$GuardInstaller = Join-Path $Root 'scripts\install-git-guards.ps1'
+if ((Test-Path (Join-Path $Root '.git')) -and (Test-Path $GuardInstaller)) {
+  & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $GuardInstaller -Quiet
+}
+
+
 function Resolve-SystemPython {
   $py = Get-Command py -ErrorAction SilentlyContinue
   if ($py) {
