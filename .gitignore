@@ -32,3 +32,21 @@ local.settings.json
 .idea/
 .DS_Store
 Thumbs.db
+
+
+# Never commit local secrets / vault exports
+vault.json
+*.vault
+*.vault.json
+*.secrets.json
+*.credentials.json
+*.wallets.json
+*.seed
+*.mnemonic
+*.recovery
+*.pem
+*.p12
+*.pfx
+.local-vault/
+secrets/
+credentials/
