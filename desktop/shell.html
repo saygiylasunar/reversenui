@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -12,106 +12,106 @@
     <header class="topbar">
       <div class="brand">R/ <span>ReversenUI</span></div>
       <div id="tabs" class="tabs"></div>
-      <button id="newLocal" class="icon-btn" title="Open localhost tool">＋</button>
+      <button id="newLocal" class="icon-btn" title="Yerel aracı aç">＋</button>
       <div class="window-stats"><span id="ramStat">RAM —</span><span id="procStat">— proc</span></div>
     </header>
 
     <div class="toolbar">
       <div class="layout-group">
-        <span class="toolbar-label">Layout</span>
+        <span class="toolbar-label">Düzen</span>
         <button data-layout="single" class="layout-btn active">▣</button>
         <button data-layout="vertical" class="layout-btn">◫</button>
         <button data-layout="horizontal" class="layout-btn">⬒</button>
         <button data-layout="grid" class="layout-btn">⊞</button>
       </div>
       <div class="memory-group">
-        <span class="toolbar-label">Memory Saver</span>
+        <span class="toolbar-label">Bellek Koruyucu</span>
         <select id="memoryProfile">
-          <option value="never">Never</option>
+          <option value="never">Asla</option>
           <option value="minimum">Minimum</option>
-          <option value="balanced" selected>Balanced</option>
-          <option value="maximum">Maximum</option>
+          <option value="balanced" selected>Dengeli</option>
+          <option value="maximum">Maksimum</option>
         </select>
       </div>
-      <div class="toolbar-hint">Shift-click tabs to select tiles</div>
+      <div class="toolbar-hint">Döşeme seçmek için sekmelere Shift+tıkla</div>
     </div>
 
     <aside class="sidebar">
       <div class="side-tabs">
-        <button class="side-tab active" data-side="tools">Tools</button>
-        <button class="side-tab" data-side="vault">Vault</button>
+        <button class="side-tab active" data-side="tools">Araçlar</button>
+        <button class="side-tab" data-side="vault">Kasa</button>
       </div>
 
       <section id="toolsPane" class="side-pane active">
-        <div class="pane-head"><strong>Local tools</strong><button id="addTool">＋</button></div>
+        <div class="pane-head"><strong>Yerel Araçlar</strong><button id="addTool">＋</button></div>
         <div id="toolsList" class="tool-list"></div>
         <details class="config-box">
-          <summary>Tool registry</summary>
-          <p>Configure start command / working directory for tools installed in custom locations.</p>
+          <summary>Araç kayıtları</summary>
+          <p>Özel konumlara kurulmuş araçların başlatma komutunu ve çalışma klasörünü yapılandır.</p>
           <textarea id="toolJson" spellcheck="false"></textarea>
-          <button id="saveTools" class="primary">Save registry</button>
+          <button id="saveTools" class="primary">Kayıtları Kaydet</button>
         </details>
       </section>
 
       <section id="vaultPane" class="side-pane">
         <div class="vault-titlebar">
-          <div><strong>Local Vault</strong><span class="local-chip">LOCAL ONLY</span></div>
-          <button id="lockVault" class="vault-lock-btn" title="Lock and clear decrypted entries from this window">Lock</button>
+          <div><strong>Yerel Kasa</strong><span class="local-chip">SADECE YEREL</span></div>
+          <button id="lockVault" class="vault-lock-btn" title="Kasayı kilitle ve çözülmüş kayıtları bu pencereden temizle">Kilitle</button>
         </div>
-        <div id="vaultSecurity" class="vault-security">Checking OS encryption…</div>
+        <div id="vaultSecurity" class="vault-security">İşletim sistemi şifrelemesi denetleniyor…</div>
         <div class="vault-toolbar">
-          <input id="vaultSearch" type="search" placeholder="Search label, address, network, tags…" autocomplete="off" />
+          <input id="vaultSearch" type="search" placeholder="Etiket, adres, ağ veya anahtar kelime ara…" autocomplete="off" />
           <select id="vaultFilter">
-            <option value="all">All items</option>
-            <option value="password">Passwords</option>
-            <option value="crypto-wallet">Crypto wallets</option>
-            <option value="api-key">API keys</option>
-            <option value="secure-note">Secure notes</option>
+            <option value="all">Tüm kayıtlar</option>
+            <option value="password">Parolalar</option>
+            <option value="crypto-wallet">Kripto cüzdanları</option>
+            <option value="api-key">API anahtarları</option>
+            <option value="secure-note">Güvenli notlar</option>
           </select>
         </div>
         <div class="vault-add-row">
           <select id="newVaultType">
-            <option value="password">Password</option>
-            <option value="crypto-wallet">Crypto wallet</option>
-            <option value="api-key">API key</option>
-            <option value="secure-note">Secure note</option>
+            <option value="password">Parola</option>
+            <option value="crypto-wallet">Kripto cüzdanı</option>
+            <option value="api-key">API anahtarı</option>
+            <option value="secure-note">Güvenli not</option>
           </select>
-          <button id="addVault">＋ Add</button>
+          <button id="addVault">＋ Ekle</button>
         </div>
         <details class="generator vault-generator">
-          <summary>Password generator</summary>
-          <label>Password length <input id="pwLength" type="number" min="8" max="128" value="24" /></label>
+          <summary>Parola üretici</summary>
+          <label>Parola uzunluğu <input id="pwLength" type="number" min="8" max="128" value="24" /></label>
           <div class="generator-row">
             <input id="generatedPassword" readonly />
-            <button id="generatePassword">Generate</button>
-            <button id="copyGeneratedPassword" title="Copy; clipboard clears after 30 seconds">Copy</button>
+            <button id="generatePassword">Üret</button>
+            <button id="copyGeneratedPassword" title="Kopyala; pano 30 saniye sonra temizlenir">Kopyala</button>
           </div>
         </details>
         <div id="vaultLockedMessage" class="vault-locked" hidden>
-          <strong>Vault locked</strong>
-          <span>Decrypted entries were cleared from this window.</span>
-          <button id="unlockVault" class="primary">Unlock from OS storage</button>
+          <strong>Kasa kilitli</strong>
+          <span>Çözülmüş kayıtlar bu pencereden temizlendi.</span>
+          <button id="unlockVault" class="primary">İşletim Sistemi Kasasından Aç</button>
         </div>
         <div id="vaultList" class="vault-list"></div>
         <div class="vault-savebar">
-          <span id="vaultSaveState">Encrypted local storage</span>
-          <button id="saveVault" class="primary">Save vault</button>
+          <span id="vaultSaveState">Şifreli yerel depolama</span>
+          <button id="saveVault" class="primary">Kasayı Kaydet</button>
         </div>
-        <p class="tiny vault-footnote">Secrets are encrypted with Electron safeStorage in the OS user-data directory, outside this Git repository. Copied secrets are cleared from the clipboard after 30 seconds.</p>
+        <p class="tiny vault-footnote">Sırlar bu Git deposunun dışında, işletim sisteminin kullanıcı veri alanında Electron safeStorage ile şifrelenir. Kopyalanan sırlar 30 saniye sonra panodan temizlenir.</p>
       </section>
     </aside>
 
     <div class="workspace-backdrop">
-      <div class="placeholder">Select or open a workspace.</div>
+      <div class="placeholder">Bir çalışma alanı seç veya aç.</div>
     </div>
   </div>
 
   <dialog id="localDialog">
     <form method="dialog">
-      <h3>Open local web tool</h3>
-      <label>Title <input id="localTitle" value="Local Tool" /></label>
+      <h3>Yerel Web Aracı Aç</h3>
+      <label>Başlık <input id="localTitle" value="Yerel Araç" /></label>
       <label>URL <input id="localUrl" value="http://127.0.0.1:3000" /></label>
-      <div class="dialog-actions"><button value="cancel">Cancel</button><button id="confirmLocal" value="default" class="primary">Open</button></div>
+      <div class="dialog-actions"><button value="cancel">İptal</button><button id="confirmLocal" value="default" class="primary">Aç</button></div>
     </form>
   </dialog>
 
