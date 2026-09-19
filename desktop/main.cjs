@@ -1,4 +1,4 @@
-const { app, BrowserWindow, WebContentsView, ipcMain, net, safeStorage } = require('electron')
+const { app, BrowserWindow, WebContentsView, ipcMain, net, safeStorage, clipboard } = require('electron')
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -211,25 +211,96 @@ function openTool(id) {
   return tab.id
 }
 
+const VAULT_TYPES = new Set(['password', 'crypto-wallet', 'api-key', 'secure-note'])
+
+function normalizeVaultEntry(entry = {}) {
+  const inferredType = entry.type || (entry.address || entry.network ? 'crypto-wallet' : 'password')
+  const type = VAULT_TYPES.has(inferredType) ? inferredType : 'secure-note'
+  return {
+    id: String(entry.id || ''),
+    type,
+    label: String(entry.label || '').slice(0, 120),
+    username: String(entry.username || '').slice(0, 240),
+    website: String(entry.website || '').slice(0, 500),
+    network: String(entry.network || '').slice(0, 120),
+    address: String(entry.address || '').slice(0, 1000),
+    secret: String(entry.secret || '').slice(0, 8000),
+    recovery: String(entry.recovery || '').slice(0, 12000),
+    notes: String(entry.notes || '').slice(0, 12000),
+    tags: String(entry.tags || '').slice(0, 500),
+    favorite: Boolean(entry.favorite)
+  }
+}
+
 async function encryptVault(value) {
   const text = JSON.stringify(value)
-  if (typeof safeStorage.encryptStringAsync === 'function' && await safeStorage.isAsyncEncryptionAvailable()) return (await safeStorage.encryptStringAsync(text)).toString('base64')
+  if (typeof safeStorage.encryptStringAsync === 'function' && typeof safeStorage.isAsyncEncryptionAvailable === 'function' && await safeStorage.isAsyncEncryptionAvailable()) {
+    return (await safeStorage.encryptStringAsync(text)).toString('base64')
+  }
   if (!safeStorage.isEncryptionAvailable()) throw new Error('OS secure storage is not available')
   return safeStorage.encryptString(text).toString('base64')
 }
+
 async function decryptVault(encoded) {
   const buffer = Buffer.from(encoded, 'base64')
-  if (typeof safeStorage.decryptStringAsync === 'function' && await safeStorage.isAsyncEncryptionAvailable()) return JSON.parse((await safeStorage.decryptStringAsync(buffer)).result)
+  if (typeof safeStorage.decryptStringAsync === 'function' && typeof safeStorage.isAsyncEncryptionAvailable === 'function' && await safeStorage.isAsyncEncryptionAvailable()) {
+    const result = await safeStorage.decryptStringAsync(buffer)
+    return JSON.parse(result.result)
+  }
   if (!safeStorage.isEncryptionAvailable()) throw new Error('OS secure storage is not available')
   return JSON.parse(safeStorage.decryptString(buffer))
 }
-async function loadVault() {
-  try { const saved = readJson(userFile('vault.json'), null); return saved?.payload ? await decryptVault(saved.payload) : [] } catch { return [] }
+
+function writeVaultFile(value) {
+  const target = userFile('vault.json')
+  const temp = userFile('vault.json.tmp')
+  fs.writeFileSync(temp, JSON.stringify(value, null, 2), { encoding: 'utf8', mode: 0o600 })
+  try { fs.renameSync(temp, target) }
+  catch (error) {
+    try { fs.rmSync(target, { force: true }) } catch {}
+    fs.renameSync(temp, target)
+  }
 }
+
+async function loadVault() {
+  const file = userFile('vault.json')
+  if (!fs.existsSync(file)) return []
+  const saved = readJson(file, null)
+  if (!saved?.payload) throw new Error('Encrypted vault file is invalid or incomplete.')
+  try {
+    const decoded = await decryptVault(saved.payload)
+    const entries = Array.isArray(decoded) ? decoded : Array.isArray(decoded?.entries) ? decoded.entries : []
+    return entries.map(normalizeVaultEntry)
+  } catch {
+    throw new Error('Encrypted vault could not be opened. It was not modified.')
+  }
+}
+
 async function saveVault(entries) {
-  const clean = Array.isArray(entries) ? entries.slice(0, 200).map(entry => ({ id: String(entry.id || ''), label: String(entry.label || '').slice(0, 100), username: String(entry.username || '').slice(0, 200), secret: String(entry.secret || '').slice(0, 2000), notes: String(entry.notes || '').slice(0, 5000) })) : []
-  writeJson(userFile('vault.json'), { version: 1, payload: await encryptVault(clean) })
-  return true
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('OS secure storage is not available')
+  const clean = Array.isArray(entries) ? entries.slice(0, 500).map(normalizeVaultEntry) : []
+  const payload = await encryptVault({ entries: clean, saved_at: new Date().toISOString() })
+  writeVaultFile({ version: 2, storage: 'electron-safeStorage', payload })
+  return { saved: true, count: clean.length, version: 2 }
+}
+
+function vaultStatus() {
+  return {
+    available: safeStorage.isEncryptionAvailable(),
+    local_only: true,
+    storage: process.platform === 'win32' ? 'Windows DPAPI via Electron safeStorage' : 'Electron safeStorage',
+    version: 2
+  }
+}
+
+function copyVaultText(value) {
+  const text = String(value || '')
+  if (!text) return { copied: false, clears_in_seconds: 0 }
+  clipboard.writeText(text)
+  setTimeout(() => {
+    try { if (clipboard.readText() === text) clipboard.clear() } catch {}
+  }, 30_000).unref?.()
+  return { copied: true, clears_in_seconds: 30 }
 }
 
 function registerIpc() {
@@ -246,6 +317,8 @@ function registerIpc() {
   ipcMain.handle('tools:open', (event, id) => { validateSender(event); return openTool(id) })
   ipcMain.handle('vault:load', event => { validateSender(event); return loadVault() })
   ipcMain.handle('vault:save', (event, entries) => { validateSender(event); return saveVault(entries) })
+  ipcMain.handle('vault:status', event => { validateSender(event); return vaultStatus() })
+  ipcMain.handle('vault:copy', (event, value) => { validateSender(event); return copyVaultText(value) })
 }
 
 async function createShell() {
