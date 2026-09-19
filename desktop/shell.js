@@ -5,11 +5,14 @@ let statuses = {}
 let memory = { totalKb:0, processCount:0, tabs:[] }
 let selected = new Set(['reversenui'])
 let vault = []
+let vaultDirty = false
+let vaultLocked = false
+let vaultStatus = null
 
 const $ = selector => document.querySelector(selector)
 const $$ = selector => [...document.querySelectorAll(selector)]
 function kb(value){ if(!value)return '—'; const mb=value/1024; return mb>1024?`${(mb/1024).toFixed(1)} GB`:`${mb.toFixed(0)} MB` }
-function toast(message){ const el=document.createElement('div');el.className='error-toast';el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),4500) }
+function toast(message,kind='error'){ const el=document.createElement('div');el.className=kind==='ok'?'status-toast':'error-toast';el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),4500) }
 function activeLimit(mode){ return mode==='grid'?4:mode==='single'?1:2 }
 function normalizedSelection(){ const ids=[...selected].filter(id=>state.tabs.some(tab=>tab.id===id)); if(!ids.length)ids.push(state.activeIds[0]||'reversenui'); return ids.slice(0,activeLimit(state.layoutMode)) }
 
@@ -48,17 +51,162 @@ function renderTools(){
   }
   $('#toolJson').value=JSON.stringify(tools,null,2)
 }
+function vaultTypeLabel(type){
+  return ({'password':'Password','crypto-wallet':'Crypto Wallet','api-key':'API Key','secure-note':'Secure Note'})[type]||'Secure Note'
+}
+function markVaultDirty(){
+  vaultDirty=true
+  const state=$('#vaultSaveState')
+  if(state){state.textContent='Unsaved local changes';state.classList.add('dirty')}
+}
+function updateVaultSecurity(){
+  const box=$('#vaultSecurity')
+  if(!box)return
+  if(!vaultStatus){box.textContent='OS encryption status unavailable';box.className='vault-security warning';return}
+  box.textContent=vaultStatus.available?'● Encrypted · '+vaultStatus.storage:'● OS encryption unavailable'
+  box.className=vaultStatus.available?'vault-security ok':'vault-security warning'
+}
+function vaultMatches(entry){
+  const filter=$('#vaultFilter')?.value||'all'
+  if(filter!=='all'&&entry.type!==filter)return false
+  const q=($('#vaultSearch')?.value||'').trim().toLowerCase()
+  if(!q)return true
+  return [entry.label,entry.username,entry.website,entry.network,entry.address,entry.tags,entry.notes].some(value=>String(value||'').toLowerCase().includes(q))
+}
+function bindVaultValue(element,entry,key,index){
+  element.value=entry[key]||''
+  element.oninput=()=>{vault[index][key]=element.value;markVaultDirty()}
+}
+function vaultInput(label,key,entry,index,options={}){
+  const placeholder=options.placeholder||''
+  const type=options.type||'text'
+  const copy=Boolean(options.copy)
+  const wrap=document.createElement('label');wrap.className='vault-field'
+  const caption=document.createElement('span');caption.textContent=label;wrap.append(caption)
+  const row=document.createElement('div');row.className='vault-value-row'
+  const input=document.createElement('input');input.type=type;input.placeholder=placeholder;input.autocomplete='off';input.dataset.k=key
+  bindVaultValue(input,entry,key,index);row.append(input)
+  if(copy){
+    const button=document.createElement('button');button.type='button';button.textContent='Copy'
+    button.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Copied · clipboard clears in 30 seconds','ok')}
+    row.append(button)
+  }
+  wrap.append(row);return wrap
+}
+function vaultSecretField(label,key,entry,index,options={}){
+  const textarea=Boolean(options.textarea)
+  const placeholder=options.placeholder||''
+  const wrap=document.createElement('label');wrap.className='vault-field'
+  const caption=document.createElement('span');caption.textContent=label;wrap.append(caption)
+  const row=document.createElement('div');row.className='vault-value-row secret-row'
+  const input=document.createElement(textarea?'textarea':'input')
+  if(!textarea)input.type='password'
+  else input.className='masked-secret'
+  input.placeholder=placeholder;input.autocomplete='off';input.dataset.k=key
+  bindVaultValue(input,entry,key,index);row.append(input)
+  const show=document.createElement('button');show.type='button';show.textContent='Show'
+  show.onclick=()=>{
+    if(textarea){input.classList.toggle('masked-secret');show.textContent=input.classList.contains('masked-secret')?'Show':'Hide'}
+    else{input.type=input.type==='password'?'text':'password';show.textContent=input.type==='password'?'Show':'Hide'}
+  }
+  const copy=document.createElement('button');copy.type='button';copy.textContent='Copy'
+  copy.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Secret copied · clipboard clears in 30 seconds','ok')}
+  row.append(show,copy);wrap.append(row);return wrap
+}
 function renderVault(){
+  updateVaultSecurity()
   const root=$('#vaultList');root.innerHTML=''
-  vault.forEach((entry,index)=>{
-    const card=document.createElement('div');card.className='vault-card'
-    card.innerHTML='<input data-k="label" placeholder="Label"><input data-k="username" placeholder="Username / account"><div class="row"><input data-k="secret" type="password" placeholder="Password / secret"><button data-show>Show</button></div><textarea data-k="notes" placeholder="Secure notes"></textarea><div class="row"><button data-copy>Copy secret</button><button data-remove>Remove</button></div>'
-    for(const input of card.querySelectorAll('[data-k]')){ input.value=entry[input.dataset.k]||'';input.oninput=()=>{vault[index][input.dataset.k]=input.value} }
-    const secret=card.querySelector('[data-k=secret]');card.querySelector('[data-show]').onclick=()=>{secret.type=secret.type==='password'?'text':'password'}
-    card.querySelector('[data-copy]').onclick=()=>navigator.clipboard.writeText(secret.value)
-    card.querySelector('[data-remove]').onclick=()=>{vault.splice(index,1);renderVault()}
+  $('#vaultLockedMessage').hidden=!vaultLocked
+  $('#saveVault').disabled=vaultLocked
+  $('#addVault').disabled=vaultLocked
+  $('#lockVault').disabled=vaultLocked
+  if(vaultLocked)return
+
+  const visible=vault.map((entry,index)=>({entry,index})).filter(item=>vaultMatches(item.entry))
+  visible.sort((a,b)=>Number(b.entry.favorite)-Number(a.entry.favorite))
+  if(!visible.length){
+    const empty=document.createElement('div');empty.className='vault-empty'
+    empty.textContent=vault.length?'No vault items match this filter.':'Vault is empty. Add a password, wallet, API key, or secure note.'
+    root.append(empty)
+    return
+  }
+
+  for(const item of visible){
+    const entry=item.entry,index=item.index
+    const card=document.createElement('article');card.className='vault-card'
+    const head=document.createElement('div');head.className='vault-card-head'
+    const meta=document.createElement('div');meta.className='vault-card-meta'
+    const badge=document.createElement('span');badge.className='vault-type '+entry.type;badge.textContent=vaultTypeLabel(entry.type)
+    const favorite=document.createElement('button');favorite.className=entry.favorite?'vault-star active':'vault-star';favorite.textContent=entry.favorite?'★':'☆';favorite.title='Favorite'
+    favorite.onclick=()=>{vault[index].favorite=!vault[index].favorite;markVaultDirty();renderVault()}
+    meta.append(badge,favorite)
+    const remove=document.createElement('button');remove.className='vault-remove';remove.textContent='Remove'
+    remove.onclick=()=>{vault.splice(index,1);markVaultDirty();renderVault()}
+    head.append(meta,remove);card.append(head)
+
+    const typeWrap=document.createElement('label');typeWrap.className='vault-field'
+    const typeCaption=document.createElement('span');typeCaption.textContent='Type'
+    const typeSelect=document.createElement('select')
+    for(const pair of [['password','Password'],['crypto-wallet','Crypto Wallet'],['api-key','API Key'],['secure-note','Secure Note']]){
+      const option=document.createElement('option');option.value=pair[0];option.textContent=pair[1];typeSelect.append(option)
+    }
+    typeSelect.value=entry.type
+    typeSelect.onchange=()=>{vault[index].type=typeSelect.value;markVaultDirty();renderVault()}
+    typeWrap.append(typeCaption,typeSelect);card.append(typeWrap)
+    card.append(vaultInput('Label','label',entry,index,{placeholder:'e.g. Binance TR, MetaMask, Gmail'}))
+
+    if(entry.type==='password'){
+      card.append(vaultInput('Username / account','username',entry,index,{placeholder:'email or username'}))
+      card.append(vaultInput('Website','website',entry,index,{placeholder:'https://…'}))
+      card.append(vaultSecretField('Password','secret',entry,index,{placeholder:'password'}))
+    }else if(entry.type==='crypto-wallet'){
+      card.append(vaultInput('Network','network',entry,index,{placeholder:'Ethereum, Solana, Zcash…'}))
+      card.append(vaultInput('Public address','address',entry,index,{placeholder:'wallet address',copy:true}))
+      card.append(vaultInput('Wallet / account label','username',entry,index,{placeholder:'MetaMask account, hardware wallet…'}))
+      card.append(vaultSecretField('Private key / wallet secret','secret',entry,index,{placeholder:'optional sensitive key'}))
+      card.append(vaultSecretField('Seed / recovery phrase','recovery',entry,index,{textarea:true,placeholder:'recovery phrase'}))
+    }else if(entry.type==='api-key'){
+      card.append(vaultInput('Service / account','username',entry,index,{placeholder:'service account'}))
+      card.append(vaultInput('Dashboard / URL','website',entry,index,{placeholder:'https://…'}))
+      card.append(vaultSecretField('API key / token','secret',entry,index,{placeholder:'secret token'}))
+    }else{
+      card.append(vaultSecretField('Sensitive value','secret',entry,index,{placeholder:'optional secret'}))
+    }
+
+    card.append(vaultInput('Tags','tags',entry,index,{placeholder:'finance, exchange, personal…'}))
+    const notes=document.createElement('label');notes.className='vault-field'
+    const notesCaption=document.createElement('span');notesCaption.textContent='Secure notes'
+    const area=document.createElement('textarea');area.placeholder='Local encrypted notes';bindVaultValue(area,entry,'notes',index)
+    notes.append(notesCaption,area);card.append(notes)
     root.append(card)
-  })
+  }
+}
+async function saveVaultNow(){
+  if(vaultLocked)return false
+  try{
+    const result=await api.saveVault(vault)
+    vaultDirty=false
+    $('#vaultSaveState').textContent='Saved · '+(result?.count??vault.length)+' items'
+    $('#vaultSaveState').classList.remove('dirty')
+    toast('Vault saved locally and encrypted','ok')
+    return true
+  }catch(err){toast(err.message);return false}
+}
+async function lockVaultNow(){
+  if(vaultLocked)return
+  if(vaultDirty&&!(await saveVaultNow()))return
+  vault=[]
+  vaultLocked=true
+  renderVault()
+}
+async function unlockVaultNow(){
+  try{
+    vault=await api.loadVault()
+    vaultLocked=false
+    vaultDirty=false
+    $('#vaultSaveState').textContent='Encrypted local storage'
+    renderVault()
+  }catch(err){toast(err.message)}
 }
 function randomPassword(length){
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()-_=+[]{}:,.?'
@@ -68,7 +216,9 @@ function randomPassword(length){
 async function bootstrap(){
   state=await api.getWorkspace();selected=new Set(state.activeIds);renderLayout();renderTabs()
   const toolData=await api.listTools();tools=toolData.tools;statuses=toolData.statuses;renderTools()
-  vault=await api.loadVault();renderVault()
+  try{vaultStatus=await api.getVaultStatus()}catch{vaultStatus=null}
+  try{vault=await api.loadVault();vaultLocked=false}catch(err){vault=[];vaultLocked=true;toast(err.message)}
+  renderVault()
   memory=await api.getMemorySnapshot();renderMemory()
 }
 
@@ -88,7 +238,16 @@ $$('.side-tab').forEach(btn=>btn.onclick=()=>{ $$('.side-tab').forEach(x=>x.clas
 $('#addTool').onclick=()=>{ tools.push({id:`custom-${Date.now()}`,name:'Custom Tool',type:'local-web',url:'http://127.0.0.1:3000',healthUrl:'',command:'',args:[],cwd:'',stopOnExit:false,autoStart:false});renderTools();$('#toolJson').focus() }
 $('#saveTools').onclick=async()=>{try{const parsed=JSON.parse($('#toolJson').value);const result=await api.saveTools(parsed);tools=result.tools;statuses=result.statuses;renderTools()}catch(err){toast(err.message)}}
 $('#generatePassword').onclick=()=>{$('#generatedPassword').value=randomPassword(Math.max(8,Math.min(128,Number($('#pwLength').value)||24)))}
-$('#addVault').onclick=()=>{vault.unshift({id:crypto.randomUUID(),label:'',username:'',secret:'',notes:''});renderVault()}
-$('#saveVault').onclick=()=>api.saveVault(vault).catch(err=>toast(err.message))
+$('#copyGeneratedPassword').onclick=async()=>{const result=await api.copyVaultText($('#generatedPassword').value);if(result?.copied)toast('Generated password copied · clipboard clears in 30 seconds','ok')}
+$('#vaultSearch').oninput=()=>renderVault()
+$('#vaultFilter').onchange=()=>renderVault()
+$('#addVault').onclick=()=>{
+  const type=$('#newVaultType').value
+  vault.unshift({id:crypto.randomUUID(),type,label:'',username:'',website:'',network:'',address:'',secret:'',recovery:'',notes:'',tags:'',favorite:false})
+  markVaultDirty();renderVault()
+}
+$('#saveVault').onclick=()=>void saveVaultNow()
+$('#lockVault').onclick=()=>void lockVaultNow()
+$('#unlockVault').onclick=()=>void unlockVaultNow()
 
 bootstrap().catch(err=>toast(err.message))
