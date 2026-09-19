@@ -25,7 +25,7 @@ function readJson(file, fallback) {
 }
 function writeJson(file, value) { fs.writeFileSync(file, JSON.stringify(value, null, 2), 'utf8') }
 function validateSender(event) {
-  if (!shellWindow || event.sender.id !== shellWindow.webContents.id) throw new Error('Untrusted IPC sender')
+  if (!shellWindow || event.sender.id !== shellWindow.webContents.id) throw new Error('Güvenilmeyen IPC göndereni')
 }
 function isLocalUrl(value) {
   try {
@@ -191,9 +191,9 @@ function memorySnapshot() {
 
 function toolById(id) { return tools().find(tool => tool.id === id) }
 function startTool(id) {
-  const tool = toolById(id); if (!tool) throw new Error('Tool not found')
+  const tool = toolById(id); if (!tool) throw new Error('Araç bulunamadı')
   if (toolProcesses.has(id)) return { running: true, pid: toolProcesses.get(id).pid }
-  if (!tool.command) throw new Error(`Configure a start command for ${tool.name}`)
+  if (!tool.command) throw new Error(`${tool.name} için başlatma komutu yapılandır`)
   const child = spawn(tool.command, tool.args || [], { cwd: tool.cwd || ROOT, shell: process.platform === 'win32', windowsHide: true, stdio: 'ignore' })
   toolProcesses.set(id, child)
   child.once('exit', () => { toolProcesses.delete(id); shellWindow?.webContents.send('tools:status', toolStatuses()) })
@@ -203,9 +203,9 @@ function startTool(id) {
 function stopTool(id) { const child = toolProcesses.get(id); if (child) { stopChild(child); toolProcesses.delete(id) }; return { running: false } }
 function toolStatuses() { return Object.fromEntries(tools().map(tool => [tool.id, { running: toolProcesses.has(tool.id), pid: toolProcesses.get(tool.id)?.pid || null }])) }
 function openTool(id) {
-  const tool = toolById(id); if (!tool) throw new Error('Tool not found')
-  if (tool.type === 'native') { if (!tool.command) throw new Error('Executable is not configured'); startTool(id); return null }
-  if (!isLocalUrl(tool.url)) throw new Error('Embedded tools must use a localhost URL')
+  const tool = toolById(id); if (!tool) throw new Error('Araç bulunamadı')
+  if (tool.type === 'native') { if (!tool.command) throw new Error('Çalıştırılabilir dosya yapılandırılmadı'); startTool(id); return null }
+  if (!isLocalUrl(tool.url)) throw new Error('Gömülü araçlar localhost URL kullanmalıdır')
   const tab = createWorkspace({ id: `tool-${tool.id}`, title: tool.name, url: tool.url, toolId: tool.id })
   setLayout('single', [tab.id])
   return tab.id
@@ -237,7 +237,7 @@ async function encryptVault(value) {
   if (typeof safeStorage.encryptStringAsync === 'function' && typeof safeStorage.isAsyncEncryptionAvailable === 'function' && await safeStorage.isAsyncEncryptionAvailable()) {
     return (await safeStorage.encryptStringAsync(text)).toString('base64')
   }
-  if (!safeStorage.isEncryptionAvailable()) throw new Error('OS secure storage is not available')
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('İşletim sistemi güvenli depolaması kullanılamıyor')
   return safeStorage.encryptString(text).toString('base64')
 }
 
@@ -247,7 +247,7 @@ async function decryptVault(encoded) {
     const result = await safeStorage.decryptStringAsync(buffer)
     return JSON.parse(result.result)
   }
-  if (!safeStorage.isEncryptionAvailable()) throw new Error('OS secure storage is not available')
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('İşletim sistemi güvenli depolaması kullanılamıyor')
   return JSON.parse(safeStorage.decryptString(buffer))
 }
 
@@ -266,18 +266,18 @@ async function loadVault() {
   const file = userFile('vault.json')
   if (!fs.existsSync(file)) return []
   const saved = readJson(file, null)
-  if (!saved?.payload) throw new Error('Encrypted vault file is invalid or incomplete.')
+  if (!saved?.payload) throw new Error('Şifreli kasa dosyası geçersiz veya eksik.')
   try {
     const decoded = await decryptVault(saved.payload)
     const entries = Array.isArray(decoded) ? decoded : Array.isArray(decoded?.entries) ? decoded.entries : []
     return entries.map(normalizeVaultEntry)
   } catch {
-    throw new Error('Encrypted vault could not be opened. It was not modified.')
+    throw new Error('Şifreli kasa açılamadı. Dosyada değişiklik yapılmadı.')
   }
 }
 
 async function saveVault(entries) {
-  if (!safeStorage.isEncryptionAvailable()) throw new Error('OS secure storage is not available')
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('İşletim sistemi güvenli depolaması kullanılamıyor')
   const clean = Array.isArray(entries) ? entries.slice(0, 500).map(normalizeVaultEntry) : []
   const payload = await encryptVault({ entries: clean, saved_at: new Date().toISOString() })
   writeVaultFile({ version: 2, storage: 'electron-safeStorage', payload })
@@ -306,7 +306,7 @@ function copyVaultText(value) {
 function registerIpc() {
   ipcMain.handle('workspace:get', event => { validateSender(event); return workspaceState() })
   ipcMain.handle('workspace:layout', (event, payload) => { validateSender(event); setLayout(payload?.mode, payload?.ids || []); return workspaceState() })
-  ipcMain.handle('workspace:open-url', (event, payload) => { validateSender(event); if (!isLocalUrl(payload?.url)) throw new Error('Only localhost tools can be embedded'); const item = createWorkspace({ title: payload.title || payload.url, url: payload.url }); setLayout('single', [item.id]); return item.id })
+  ipcMain.handle('workspace:open-url', (event, payload) => { validateSender(event); if (!isLocalUrl(payload?.url)) throw new Error('Yalnızca localhost araçları gömülebilir'); const item = createWorkspace({ title: payload.title || payload.url, url: payload.url }); setLayout('single', [item.id]); return item.id })
   ipcMain.handle('workspace:close', (event, id) => { validateSender(event); closeWorkspace(id); return workspaceState() })
   ipcMain.handle('memory:profile', (event, profile) => { validateSender(event); memoryProfile = ['never','minimum','balanced','maximum'].includes(profile) ? profile : 'balanced'; runMemorySaver(); return workspaceState() })
   ipcMain.handle('memory:snapshot', event => { validateSender(event); return memorySnapshot() })
