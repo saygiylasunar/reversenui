@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('reversenuiDesktop', {
   openTool: id => ipcRenderer.invoke('tools:open', id),
   loadVault: () => ipcRenderer.invoke('vault:load'),
   saveVault: entries => ipcRenderer.invoke('vault:save', entries),
+  getVaultStatus: () => ipcRenderer.invoke('vault:status'),
+  copyVaultText: value => ipcRenderer.invoke('vault:copy', value),
   onWorkspaceState: callback => ipcRenderer.on('workspace:state', (_event, state) => callback(state)),
   onToolStatus: callback => ipcRenderer.on('tools:status', (_event, status) => callback(status)),
   onMemorySnapshot: callback => ipcRenderer.on('memory:snapshot', (_event, snapshot) => callback(snapshot))
