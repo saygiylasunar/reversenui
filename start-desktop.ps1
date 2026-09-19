@@ -93,11 +93,12 @@ try {
 
   $bundleFiles = @(Get-ChildItem -Path '.\dist\assets' -Filter '*.js' -File -ErrorAction SilentlyContinue)
   if ($bundleFiles.Count -eq 0) { throw 'Frontend build produced no JavaScript bundle.' }
-  $diceMarker = Select-String -Path ($bundleFiles.FullName) -Pattern 'Qwen Builder|PROMPT DICE|Prompt Dice' -Quiet
-  if (-not $diceMarker) {
-    throw 'Fresh frontend bundle does not contain Prompt Dice / Qwen Builder. Source integration is missing.'
+  $rollApiMarker = Select-String -Path ($bundleFiles.FullName) -Pattern '/api/prompt/roll' -Quiet
+  $qwenProfileMarker = Select-String -Path ($bundleFiles.FullName) -Pattern 'qwen3-vl-4b-instruct' -Quiet
+  if (-not ($rollApiMarker -and $qwenProfileMarker)) {
+    throw 'Fresh frontend bundle does not contain the Prompt Roller feature markers (/api/prompt/roll + qwen3-vl-4b-instruct).'
   }
-  Write-Host '[ReversenUI] Fresh bundle verified: Prompt Dice present.' -ForegroundColor Green
+  Write-Host '[ReversenUI] Fresh bundle verified: Prompt Roller present.' -ForegroundColor Green
 }
 finally {
   Pop-Location
