@@ -52,7 +52,7 @@ function renderTools(){
   $('#toolJson').value=JSON.stringify(tools,null,2)
 }
 function vaultTypeLabel(type){
-  return ({'parola':'Parola','crypto-wallet':'Kripto Cüzdanı','api-key':'API Anahtarı','secure-note':'Güvenli Not'})[type]||'Güvenli Not'
+  return ({'password':'Parola','crypto-wallet':'Kripto Cüzdanı','api-key':'API Anahtarı','secure-note':'Güvenli Not'})[type]||'Güvenli Not'
 }
 function markVaultDirty(){
   vaultDirty=true
@@ -100,14 +100,14 @@ function vaultSecretField(label,key,entry,index,options={}){
   const caption=document.createElement('span');caption.textContent=label;wrap.append(caption)
   const row=document.createElement('div');row.className='vault-value-row secret-row'
   const input=document.createElement(textarea?'textarea':'input')
-  if(!textarea)input.type='parola'
+  if(!textarea)input.type='password'
   else input.className='masked-secret'
   input.placeholder=placeholder;input.autocomplete='off';input.dataset.k=key
   bindVaultValue(input,entry,key,index);row.append(input)
   const show=document.createElement('button');show.type='button';show.textContent='Göster'
   show.onclick=()=>{
     if(textarea){input.classList.toggle('masked-secret');show.textContent=input.classList.contains('masked-secret')?'Göster':'Gizle'}
-    else{input.type=input.type==='parola'?'text':'parola';show.textContent=input.type==='parola'?'Göster':'Gizle'}
+    else{input.type=input.type==='password'?'text':'password';show.textContent=input.type==='password'?'Göster':'Gizle'}
   }
   const copy=document.createElement('button');copy.type='button';copy.textContent='Kopyala'
   copy.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Sır kopyalandı · pano 30 saniye sonra temizlenir','ok')}
@@ -147,7 +147,7 @@ function renderVault(){
     const typeWrap=document.createElement('label');typeWrap.className='vault-field'
     const typeCaption=document.createElement('span');typeCaption.textContent='Tür'
     const typeSelect=document.createElement('select')
-    for(const pair of [['parola','Parola'],['crypto-wallet','Kripto Cüzdanı'],['api-key','API Anahtarı'],['secure-note','Güvenli Not']]){
+    for(const pair of [['password','Parola'],['crypto-wallet','Kripto Cüzdanı'],['api-key','API Anahtarı'],['secure-note','Güvenli Not']]){
       const option=document.createElement('option');option.value=pair[0];option.textContent=pair[1];typeSelect.append(option)
     }
     typeSelect.value=entry.type
@@ -155,7 +155,7 @@ function renderVault(){
     typeWrap.append(typeCaption,typeSelect);card.append(typeWrap)
     card.append(vaultInput('Etiket','label',entry,index,{placeholder:'örn. Binance TR, MetaMask, Gmail'}))
 
-    if(entry.type==='parola'){
+    if(entry.type==='password'){
       card.append(vaultInput('Kullanıcı adı / hesap','username',entry,index,{placeholder:'e-posta veya kullanıcı adı'}))
       card.append(vaultInput('Web sitesi','website',entry,index,{placeholder:'https://…'}))
       card.append(vaultSecretField('Parola','secret',entry,index,{placeholder:'parola'}))
