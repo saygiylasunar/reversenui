@@ -22,7 +22,7 @@ function renderTabs(){
   for(const tab of state.tabs){
     const button=document.createElement('button');button.className=`tab ${state.activeIds.includes(tab.id)?'active':''} ${selected.has(tab.id)?'selected':''} ${tab.hibernated?'sleeping':''}`
     const mem=memById.get(tab.id)
-    button.innerHTML=`<span class="dot"></span><span class="title"></span><span class="mem">${mem&&!mem.sleeping?kb(mem.memoryKb):'sleep'}</span>${tab.id==='reversenui'?'':'<span class="close">×</span>'}`
+    button.innerHTML=`<span class="dot"></span><span class="title"></span><span class="mem">${mem&&!mem.sleeping?kb(mem.memoryKb):'uyku'}</span>${tab.id==='reversenui'?'':'<span class="close">×</span>'}`
     button.querySelector('.title').textContent=tab.title
     button.addEventListener('click',async event=>{
       if(event.target.classList.contains('close')){ await api.closeWorkspace(tab.id);selected.delete(tab.id);return }
@@ -32,7 +32,7 @@ function renderTabs(){
     $('#tabs').append(button)
   }
 }
-function renderMemory(){ $('#ramStat').textContent=`RAM ${kb(memory.totalKb)}`;$('#procStat').textContent=`${memory.processCount||0} proc`;renderTabs() }
+function renderMemory(){ $('#ramStat').textContent=`RAM ${kb(memory.totalKb)}`;$('#procStat').textContent=`${memory.processCount||0} süreç`;renderTabs() }
 function renderLayout(){
   $$('.layout-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.layout===state.layoutMode))
   $('#memoryProfile').value=state.memoryProfile||'balanced'
@@ -42,8 +42,8 @@ function renderTools(){
   for(const tool of tools){
     const status=statuses[tool.id]||{running:false}
     const card=document.createElement('div');card.className='tool-card'
-    card.innerHTML=`<div class="tool-top"><span class="tool-name"></span><span class="tool-status ${status.running?'running':''}">${status.running?'● RUNNING':'○ IDLE'}</span></div><div class="tool-url"></div><div class="tool-actions"><button data-action="open">Open</button><button data-action="start">Start</button><button data-action="stop">Stop</button></div>`
-    card.querySelector('.tool-name').textContent=tool.name;card.querySelector('.tool-url').textContent=tool.url||tool.command||'Not configured'
+    card.innerHTML=`<div class="tool-top"><span class="tool-name"></span><span class="tool-status ${status.running?'running':''}">${status.running?'● ÇALIŞIYOR':'○ BOŞTA'}</span></div><div class="tool-url"></div><div class="tool-actions"><button data-action="open">Aç</button><button data-action="start">Başlat</button><button data-action="stop">Durdur</button></div>`
+    card.querySelector('.tool-name').textContent=tool.name;card.querySelector('.tool-url').textContent=tool.url||tool.command||'Yapılandırılmadı'
     card.querySelector('[data-action=open]').onclick=()=>api.openTool(tool.id).catch(err=>toast(err.message))
     card.querySelector('[data-action=start]').onclick=()=>api.startTool(tool.id).catch(err=>toast(err.message))
     card.querySelector('[data-action=stop]').onclick=()=>api.stopTool(tool.id).catch(err=>toast(err.message))
@@ -52,18 +52,18 @@ function renderTools(){
   $('#toolJson').value=JSON.stringify(tools,null,2)
 }
 function vaultTypeLabel(type){
-  return ({'password':'Password','crypto-wallet':'Crypto Wallet','api-key':'API Key','secure-note':'Secure Note'})[type]||'Secure Note'
+  return ({'parola':'Parola','crypto-wallet':'Kripto Cüzdanı','api-key':'API Anahtarı','secure-note':'Güvenli Not'})[type]||'Güvenli Not'
 }
 function markVaultDirty(){
   vaultDirty=true
   const state=$('#vaultSaveState')
-  if(state){state.textContent='Unsaved local changes';state.classList.add('dirty')}
+  if(state){state.textContent='Kaydedilmemiş yerel değişiklikler';state.classList.add('dirty')}
 }
 function updateVaultSecurity(){
   const box=$('#vaultSecurity')
   if(!box)return
-  if(!vaultStatus){box.textContent='OS encryption status unavailable';box.className='vault-security warning';return}
-  box.textContent=vaultStatus.available?'● Encrypted · '+vaultStatus.storage:'● OS encryption unavailable'
+  if(!vaultStatus){box.textContent='İşletim sistemi şifreleme durumu alınamadı';box.className='vault-security warning';return}
+  box.textContent=vaultStatus.available?'● Şifreli · '+vaultStatus.storage:'● İşletim sistemi şifrelemesi kullanılamıyor'
   box.className=vaultStatus.available?'vault-security ok':'vault-security warning'
 }
 function vaultMatches(entry){
@@ -87,8 +87,8 @@ function vaultInput(label,key,entry,index,options={}){
   const input=document.createElement('input');input.type=type;input.placeholder=placeholder;input.autocomplete='off';input.dataset.k=key
   bindVaultValue(input,entry,key,index);row.append(input)
   if(copy){
-    const button=document.createElement('button');button.type='button';button.textContent='Copy'
-    button.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Copied · clipboard clears in 30 seconds','ok')}
+    const button=document.createElement('button');button.type='button';button.textContent='Kopyala'
+    button.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Kopyalandı · pano 30 saniye sonra temizlenir','ok')}
     row.append(button)
   }
   wrap.append(row);return wrap
@@ -100,17 +100,17 @@ function vaultSecretField(label,key,entry,index,options={}){
   const caption=document.createElement('span');caption.textContent=label;wrap.append(caption)
   const row=document.createElement('div');row.className='vault-value-row secret-row'
   const input=document.createElement(textarea?'textarea':'input')
-  if(!textarea)input.type='password'
+  if(!textarea)input.type='parola'
   else input.className='masked-secret'
   input.placeholder=placeholder;input.autocomplete='off';input.dataset.k=key
   bindVaultValue(input,entry,key,index);row.append(input)
-  const show=document.createElement('button');show.type='button';show.textContent='Show'
+  const show=document.createElement('button');show.type='button';show.textContent='Göster'
   show.onclick=()=>{
-    if(textarea){input.classList.toggle('masked-secret');show.textContent=input.classList.contains('masked-secret')?'Show':'Hide'}
-    else{input.type=input.type==='password'?'text':'password';show.textContent=input.type==='password'?'Show':'Hide'}
+    if(textarea){input.classList.toggle('masked-secret');show.textContent=input.classList.contains('masked-secret')?'Göster':'Gizle'}
+    else{input.type=input.type==='parola'?'text':'parola';show.textContent=input.type==='parola'?'Göster':'Gizle'}
   }
-  const copy=document.createElement('button');copy.type='button';copy.textContent='Copy'
-  copy.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Secret copied · clipboard clears in 30 seconds','ok')}
+  const copy=document.createElement('button');copy.type='button';copy.textContent='Kopyala'
+  copy.onclick=async()=>{const result=await api.copyVaultText(input.value);if(result?.copied)toast('Sır kopyalandı · pano 30 saniye sonra temizlenir','ok')}
   row.append(show,copy);wrap.append(row);return wrap
 }
 function renderVault(){
@@ -126,7 +126,7 @@ function renderVault(){
   visible.sort((a,b)=>Number(b.entry.favorite)-Number(a.entry.favorite))
   if(!visible.length){
     const empty=document.createElement('div');empty.className='vault-empty'
-    empty.textContent=vault.length?'No vault items match this filter.':'Vault is empty. Add a password, wallet, API key, or secure note.'
+    empty.textContent=vault.length?'Bu filtreyle eşleşen kasa kaydı yok.':'Kasa boş. Parola, cüzdan, API anahtarı veya güvenli not ekle.'
     root.append(empty)
     return
   }
@@ -137,46 +137,46 @@ function renderVault(){
     const head=document.createElement('div');head.className='vault-card-head'
     const meta=document.createElement('div');meta.className='vault-card-meta'
     const badge=document.createElement('span');badge.className='vault-type '+entry.type;badge.textContent=vaultTypeLabel(entry.type)
-    const favorite=document.createElement('button');favorite.className=entry.favorite?'vault-star active':'vault-star';favorite.textContent=entry.favorite?'★':'☆';favorite.title='Favorite'
+    const favorite=document.createElement('button');favorite.className=entry.favorite?'vault-star active':'vault-star';favorite.textContent=entry.favorite?'★':'☆';favorite.title='Favori'
     favorite.onclick=()=>{vault[index].favorite=!vault[index].favorite;markVaultDirty();renderVault()}
     meta.append(badge,favorite)
-    const remove=document.createElement('button');remove.className='vault-remove';remove.textContent='Remove'
+    const remove=document.createElement('button');remove.className='vault-remove';remove.textContent='Sil'
     remove.onclick=()=>{vault.splice(index,1);markVaultDirty();renderVault()}
     head.append(meta,remove);card.append(head)
 
     const typeWrap=document.createElement('label');typeWrap.className='vault-field'
-    const typeCaption=document.createElement('span');typeCaption.textContent='Type'
+    const typeCaption=document.createElement('span');typeCaption.textContent='Tür'
     const typeSelect=document.createElement('select')
-    for(const pair of [['password','Password'],['crypto-wallet','Crypto Wallet'],['api-key','API Key'],['secure-note','Secure Note']]){
+    for(const pair of [['parola','Parola'],['crypto-wallet','Kripto Cüzdanı'],['api-key','API Anahtarı'],['secure-note','Güvenli Not']]){
       const option=document.createElement('option');option.value=pair[0];option.textContent=pair[1];typeSelect.append(option)
     }
     typeSelect.value=entry.type
     typeSelect.onchange=()=>{vault[index].type=typeSelect.value;markVaultDirty();renderVault()}
     typeWrap.append(typeCaption,typeSelect);card.append(typeWrap)
-    card.append(vaultInput('Label','label',entry,index,{placeholder:'e.g. Binance TR, MetaMask, Gmail'}))
+    card.append(vaultInput('Etiket','label',entry,index,{placeholder:'örn. Binance TR, MetaMask, Gmail'}))
 
-    if(entry.type==='password'){
-      card.append(vaultInput('Username / account','username',entry,index,{placeholder:'email or username'}))
-      card.append(vaultInput('Website','website',entry,index,{placeholder:'https://…'}))
-      card.append(vaultSecretField('Password','secret',entry,index,{placeholder:'password'}))
+    if(entry.type==='parola'){
+      card.append(vaultInput('Kullanıcı adı / hesap','username',entry,index,{placeholder:'e-posta veya kullanıcı adı'}))
+      card.append(vaultInput('Web sitesi','website',entry,index,{placeholder:'https://…'}))
+      card.append(vaultSecretField('Parola','secret',entry,index,{placeholder:'parola'}))
     }else if(entry.type==='crypto-wallet'){
-      card.append(vaultInput('Network','network',entry,index,{placeholder:'Ethereum, Solana, Zcash…'}))
-      card.append(vaultInput('Public address','address',entry,index,{placeholder:'wallet address',copy:true}))
-      card.append(vaultInput('Wallet / account label','username',entry,index,{placeholder:'MetaMask account, hardware wallet…'}))
-      card.append(vaultSecretField('Private key / wallet secret','secret',entry,index,{placeholder:'optional sensitive key'}))
-      card.append(vaultSecretField('Seed / recovery phrase','recovery',entry,index,{textarea:true,placeholder:'recovery phrase'}))
+      card.append(vaultInput('Ağ','network',entry,index,{placeholder:'Ethereum, Solana, Zcash…'}))
+      card.append(vaultInput('Açık adres','address',entry,index,{placeholder:'cüzdan adresi',copy:true}))
+      card.append(vaultInput('Cüzdan / hesap etiketi','username',entry,index,{placeholder:'MetaMask hesabı, donanım cüzdanı…'}))
+      card.append(vaultSecretField('Özel anahtar / cüzdan sırrı','secret',entry,index,{placeholder:'isteğe bağlı hassas anahtar'}))
+      card.append(vaultSecretField('Seed / kurtarma ifadesi','recovery',entry,index,{textarea:true,placeholder:'kurtarma ifadesi'}))
     }else if(entry.type==='api-key'){
-      card.append(vaultInput('Service / account','username',entry,index,{placeholder:'service account'}))
-      card.append(vaultInput('Dashboard / URL','website',entry,index,{placeholder:'https://…'}))
-      card.append(vaultSecretField('API key / token','secret',entry,index,{placeholder:'secret token'}))
+      card.append(vaultInput('Servis / hesap','username',entry,index,{placeholder:'servis hesabı'}))
+      card.append(vaultInput('Panel / URL','website',entry,index,{placeholder:'https://…'}))
+      card.append(vaultSecretField('API anahtarı / token','secret',entry,index,{placeholder:'gizli token'}))
     }else{
-      card.append(vaultSecretField('Sensitive value','secret',entry,index,{placeholder:'optional secret'}))
+      card.append(vaultSecretField('Hassas değer','secret',entry,index,{placeholder:'isteğe bağlı sır'}))
     }
 
-    card.append(vaultInput('Tags','tags',entry,index,{placeholder:'finance, exchange, personal…'}))
+    card.append(vaultInput('Etiketler','tags',entry,index,{placeholder:'finans, borsa, kişisel…'}))
     const notes=document.createElement('label');notes.className='vault-field'
-    const notesCaption=document.createElement('span');notesCaption.textContent='Secure notes'
-    const area=document.createElement('textarea');area.placeholder='Local encrypted notes';bindVaultValue(area,entry,'notes',index)
+    const notesCaption=document.createElement('span');notesCaption.textContent='Güvenli notlar'
+    const area=document.createElement('textarea');area.placeholder='Yerel şifreli notlar';bindVaultValue(area,entry,'notes',index)
     notes.append(notesCaption,area);card.append(notes)
     root.append(card)
   }
@@ -186,9 +186,9 @@ async function saveVaultNow(){
   try{
     const result=await api.saveVault(vault)
     vaultDirty=false
-    $('#vaultSaveState').textContent='Saved · '+(result?.count??vault.length)+' items'
+    $('#vaultSaveState').textContent='Kaydedildi · '+(result?.count??vault.length)+' kayıt'
     $('#vaultSaveState').classList.remove('dirty')
-    toast('Vault saved locally and encrypted','ok')
+    toast('Kasa yerel olarak şifreli biçimde kaydedildi','ok')
     return true
   }catch(err){toast(err.message);return false}
 }
@@ -204,7 +204,7 @@ async function unlockVaultNow(){
     vault=await api.loadVault()
     vaultLocked=false
     vaultDirty=false
-    $('#vaultSaveState').textContent='Encrypted local storage'
+    $('#vaultSaveState').textContent='Şifreli yerel depolama'
     renderVault()
   }catch(err){toast(err.message)}
 }
@@ -235,10 +235,10 @@ $('#memoryProfile').onchange=event=>api.setMemoryProfile(event.target.value).cat
 $('#newLocal').onclick=()=>$('#localDialog').showModal()
 $('#confirmLocal').onclick=event=>{event.preventDefault();api.openLocalUrl($('#localTitle').value,$('#localUrl').value).then(()=>$('#localDialog').close()).catch(err=>toast(err.message))}
 $$('.side-tab').forEach(btn=>btn.onclick=()=>{ $$('.side-tab').forEach(x=>x.classList.toggle('active',x===btn)); $$('.side-pane').forEach(pane=>pane.classList.toggle('active',pane.id===`${btn.dataset.side}Pane`)) })
-$('#addTool').onclick=()=>{ tools.push({id:`custom-${Date.now()}`,name:'Custom Tool',type:'local-web',url:'http://127.0.0.1:3000',healthUrl:'',command:'',args:[],cwd:'',stopOnExit:false,autoStart:false});renderTools();$('#toolJson').focus() }
+$('#addTool').onclick=()=>{ tools.push({id:`custom-${Date.now()}`,name:'Özel Araç',type:'local-web',url:'http://127.0.0.1:3000',healthUrl:'',command:'',args:[],cwd:'',stopOnExit:false,autoStart:false});renderTools();$('#toolJson').focus() }
 $('#saveTools').onclick=async()=>{try{const parsed=JSON.parse($('#toolJson').value);const result=await api.saveTools(parsed);tools=result.tools;statuses=result.statuses;renderTools()}catch(err){toast(err.message)}}
 $('#generatePassword').onclick=()=>{$('#generatedPassword').value=randomPassword(Math.max(8,Math.min(128,Number($('#pwLength').value)||24)))}
-$('#copyGeneratedPassword').onclick=async()=>{const result=await api.copyVaultText($('#generatedPassword').value);if(result?.copied)toast('Generated password copied · clipboard clears in 30 seconds','ok')}
+$('#copyGeneratedPassword').onclick=async()=>{const result=await api.copyVaultText($('#generatedPassword').value);if(result?.copied)toast('Üretilen parola kopyalandı · pano 30 saniye sonra temizlenir','ok')}
 $('#vaultSearch').oninput=()=>renderVault()
 $('#vaultFilter').onchange=()=>renderVault()
 $('#addVault').onclick=()=>{
