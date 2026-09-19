@@ -54,14 +54,50 @@
       </section>
 
       <section id="vaultPane" class="side-pane">
-        <div class="pane-head"><strong>Vault / Secure Notes</strong><button id="addVault">＋</button></div>
-        <div class="generator">
+        <div class="vault-titlebar">
+          <div><strong>Local Vault</strong><span class="local-chip">LOCAL ONLY</span></div>
+          <button id="lockVault" class="vault-lock-btn" title="Lock and clear decrypted entries from this window">Lock</button>
+        </div>
+        <div id="vaultSecurity" class="vault-security">Checking OS encryption…</div>
+        <div class="vault-toolbar">
+          <input id="vaultSearch" type="search" placeholder="Search label, address, network, tags…" autocomplete="off" />
+          <select id="vaultFilter">
+            <option value="all">All items</option>
+            <option value="password">Passwords</option>
+            <option value="crypto-wallet">Crypto wallets</option>
+            <option value="api-key">API keys</option>
+            <option value="secure-note">Secure notes</option>
+          </select>
+        </div>
+        <div class="vault-add-row">
+          <select id="newVaultType">
+            <option value="password">Password</option>
+            <option value="crypto-wallet">Crypto wallet</option>
+            <option value="api-key">API key</option>
+            <option value="secure-note">Secure note</option>
+          </select>
+          <button id="addVault">＋ Add</button>
+        </div>
+        <details class="generator vault-generator">
+          <summary>Password generator</summary>
           <label>Password length <input id="pwLength" type="number" min="8" max="128" value="24" /></label>
-          <div class="generator-row"><input id="generatedPassword" readonly /><button id="generatePassword">Generate</button></div>
+          <div class="generator-row">
+            <input id="generatedPassword" readonly />
+            <button id="generatePassword">Generate</button>
+            <button id="copyGeneratedPassword" title="Copy; clipboard clears after 30 seconds">Copy</button>
+          </div>
+        </details>
+        <div id="vaultLockedMessage" class="vault-locked" hidden>
+          <strong>Vault locked</strong>
+          <span>Decrypted entries were cleared from this window.</span>
+          <button id="unlockVault" class="primary">Unlock from OS storage</button>
         </div>
         <div id="vaultList" class="vault-list"></div>
-        <button id="saveVault" class="primary">Save encrypted vault</button>
-        <p class="tiny">Stored through the OS-backed Electron safeStorage API.</p>
+        <div class="vault-savebar">
+          <span id="vaultSaveState">Encrypted local storage</span>
+          <button id="saveVault" class="primary">Save vault</button>
+        </div>
+        <p class="tiny vault-footnote">Secrets are encrypted with Electron safeStorage in the OS user-data directory, outside this Git repository. Copied secrets are cleared from the clipboard after 30 seconds.</p>
       </section>
     </aside>
 
