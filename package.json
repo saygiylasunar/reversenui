@@ -1,0 +1,14 @@
+{
+  "name": "reversenui",
+  "private": true,
+  "version": "0.3.0",
+  "description": "Local-first AI engineering workbench",
+  "scripts": {
+    "dev": "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./start-desktop.ps1",
+    "start": "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./start-desktop.ps1",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "desktop:start": "npm --prefix desktop start",
+    "desktop:check": "npm --prefix desktop run check"
+  }
+}
